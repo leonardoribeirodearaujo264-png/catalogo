@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "whatsapp";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "whatsapp" | "brand";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
@@ -11,6 +11,7 @@ const variants: Record<Variant, string> = {
   ghost: "text-gray-600 hover:bg-gray-100",
   danger: "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200",
   whatsapp: "bg-[#16a34a] text-white hover:bg-[#128a3e]",
+  brand: "bg-red-600 text-white shadow-lg shadow-red-600/25 hover:bg-red-700 hover:shadow-red-600/30",
 };
 
 const sizes: Record<Size, string> = {
@@ -33,7 +34,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center font-semibold transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
         variants[variant],
         sizes[size],
         className,

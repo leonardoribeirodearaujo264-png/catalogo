@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Catálogo Digital Universal",
+  title: "Catálogo Digital",
   description: "Crie seu catálogo digital e compartilhe um link com seus clientes. Funciona para qualquer negócio.",
 };
 

@@ -29,7 +29,7 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="border-b border-gray-100">
         <div className="container-app flex h-16 items-center justify-between">
-          <span className="text-base font-extrabold text-gray-900 sm:text-lg">Catálogo Digital Universal</span>
+          <span className="text-base font-extrabold text-gray-900 sm:text-lg">Catálogo Digital</span>
           <div className="flex items-center gap-2">
             <Link
               href="/login"
@@ -108,7 +108,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-gray-100 py-6">
         <p className="container-app text-center text-xs text-gray-400">
-          Catálogo Digital Universal — crie catálogos para qualquer nicho de negócio.
+          Catálogo Digital — crie catálogos para qualquer nicho de negócio.
         </p>
       </footer>
     </div>
