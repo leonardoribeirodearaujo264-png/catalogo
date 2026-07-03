@@ -22,7 +22,7 @@ export default async function CatalogLayout({
   try {
     catalog = await fetchPublishedCatalogBySlug(client, slug);
   } catch (err) {
-    console.error("Erro ao buscar catálogo (o schema.sql já foi rodado no Supabase?):", err);
+    console.error("Erro ao buscar catálogo (o supabase/setup.sql já foi rodado no Supabase?):", err);
     notFound();
   }
   if (!catalog) notFound();

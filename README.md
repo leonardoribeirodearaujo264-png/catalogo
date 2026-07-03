@@ -25,7 +25,7 @@ app/
 components/                   # componentes React (site, admin, ui/)
 lib/                           # auth, contexts, Supabase, utils
 types/                         # tipos TypeScript compartilhados
-supabase/                      # schema.sql e seed.sql
+supabase/                      # setup.sql (schema + RLS + dados de exemplo)
 proxy.ts                       # protege /admin, /login, /register (ver nota abaixo)
 ```
 
@@ -60,9 +60,9 @@ A autenticação e todos os dados do catálogo dependem do Supabase — não há
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
 
-5. Abra o **SQL Editor** do projeto e rode `supabase/schema.sql` — cria as tabelas `catalogs`, `categories`, `products`, `leads` e as policies de RLS (cada usuário só acessa o próprio catálogo).
+5. Abra o **SQL Editor** do projeto, cole o conteúdo de `supabase/setup.sql` e rode. Cria as tabelas `catalogs`, `categories`, `products`, `leads` e as policies de RLS (cada usuário só acessa o próprio catálogo). Nesse primeiro momento a parte de "dados de exemplo" no fim do arquivo não insere nada — o catálogo de teste ainda não existe.
 6. Rode `npm run dev`, acesse `/register` e crie uma conta informando o nome do negócio, e-mail e senha. Isso já cria seu catálogo automaticamente (login automático, direto no painel).
-7. (Opcional) Para carregar os 12 itens de exemplo cobrindo vários nichos: cadastre-se com o nome do negócio **"RR Repuxação"** e rode `supabase/seed.sql` no SQL Editor — ele encontra o catálogo pelo slug `rr-repuxacao` gerado no cadastro e também aplica a logo de exemplo (`public/logo-rr.png`). Se usou outro nome, troque o slug no topo do arquivo.
+7. (Opcional) Para carregar os 12 itens de exemplo cobrindo vários nichos: cadastre-se com o nome do negócio **"RR Repuxação"**, depois rode `supabase/setup.sql` **de novo** no SQL Editor — dessa vez ele encontra o catálogo pelo slug `rr-repuxacao` e carrega os itens de exemplo + a logo (`public/logo-rr.png`). Se usou outro nome, troque o slug `rr-repuxacao` no bloco final do arquivo. É seguro rodar o arquivo quantas vezes precisar.
 
 ## Segurança
 

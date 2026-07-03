@@ -1,5 +1,5 @@
 // Formato das linhas como ficam no Postgres (snake_case), espelhando
-// supabase/schema.sql. Os componentes da aplicação usam os tipos de
+// supabase/setup.sql. Os componentes da aplicação usam os tipos de
 // /types/catalog.ts (camelCase) — a conversão fica em ./mappers.ts.
 
 import type { BusinessAddress, InterestListEntry, SocialLinks } from "@/types/catalog";
