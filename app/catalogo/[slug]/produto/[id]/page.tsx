@@ -2,9 +2,10 @@
 
 import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import { useCatalog } from "@/lib/catalog-context";
-import { useSettings } from "@/lib/settings-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { useInterestList } from "@/lib/interest-context";
+import { getBrowserClient } from "@/lib/supabase/browser-client";
+import { insertLead } from "@/lib/supabase/queries";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,14 +13,14 @@ import { WhatsAppIcon } from "@/components/icons";
 import { buildItemInterestMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/utils";
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string; id: string }> }) {
   const { id } = use(params);
-  const { getItem, getCategory } = useCatalog();
-  const { settings } = useSettings();
+  const { catalog, getItem, getCategory } = useCatalogView();
   const { addEntry } = useInterestList();
 
   const item = getItem(id);
   const category = item ? getCategory(item.categoryId) : undefined;
+  const base = `/catalogo/${catalog.slug}`;
 
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
@@ -35,7 +36,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <span className="text-4xl">🔍</span>
         <h1 className="text-xl font-bold text-gray-900">Item não encontrado</h1>
         <p className="text-sm text-gray-500">Ele pode ter sido removido ou o link está incorreto.</p>
-        <Link href="/catalogo" className="text-sm font-semibold text-brand-accent">
+        <Link href={base} className="text-sm font-semibold text-brand-accent">
           ← Voltar para o catálogo
         </Link>
       </div>
@@ -50,15 +51,44 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const finalPrice = selectedVariation?.price ?? item.price;
 
   const whatsappMessage = buildItemInterestMessage({
-    greeting: settings.whatsappDefaultMessage,
+    greeting: catalog.whatsappDefaultMessage,
     itemName: item.name,
     price: finalPrice,
     variationName: selectedVariation?.name,
   });
-  const whatsappUrl = buildWhatsAppUrl(settings.whatsappNumber, whatsappMessage);
+  const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, whatsappMessage);
+
+  function handleBuyClick() {
+    const client = getBrowserClient();
+    if (client) {
+      insertLead(client, {
+        catalogId: catalog.id,
+        items: [
+          {
+            catalogId: catalog.id,
+            itemId: item!.id,
+            name: item!.name,
+            price: finalPrice,
+            variationName: selectedVariation?.name,
+            quantity: 1,
+          },
+        ],
+        message: whatsappMessage,
+      }).catch(() => {
+        // best-effort: não bloqueia a compra se o registro do lead falhar
+      });
+    }
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  }
 
   function handleAddToInterest() {
-    addEntry({ itemId: item!.id, name: item!.name, price: finalPrice, variationName: selectedVariation?.name });
+    addEntry({
+      catalogId: catalog.id,
+      itemId: item!.id,
+      name: item!.name,
+      price: finalPrice,
+      variationName: selectedVariation?.name,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }
@@ -67,7 +97,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     <div className="pb-28">
       <div className="container-app py-5">
         <nav className="flex items-center gap-2 text-sm text-gray-500">
-          <Link href="/catalogo" className="hover:text-gray-900">← Catálogo</Link>
+          <Link href={base} className="hover:text-gray-900">← Catálogo</Link>
           <span>›</span>
           <span className="truncate text-gray-900">{item.name}</span>
         </nav>
@@ -133,18 +163,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           )}
 
           <div className="mt-8 hidden gap-3 md:flex">
-            <a
-              href={canBuy ? whatsappUrl : undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-disabled={!canBuy}
-              className={!canBuy ? "pointer-events-none" : ""}
-            >
-              <Button variant="whatsapp" size="lg" disabled={!canBuy}>
-                <WhatsAppIcon className="h-5 w-5" />
-                {outOfStock ? "Produto esgotado" : "Comprar pelo WhatsApp"}
-              </Button>
-            </a>
+            <Button variant="whatsapp" size="lg" disabled={!canBuy} onClick={handleBuyClick}>
+              <WhatsAppIcon className="h-5 w-5" />
+              {outOfStock ? "Produto esgotado" : "Comprar pelo WhatsApp"}
+            </Button>
             <Button variant="outline" size="lg" disabled={!canBuy} onClick={handleAddToInterest}>
               {added ? "Adicionado ✓" : "+ Lista de interesse"}
             </Button>
@@ -157,17 +179,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <Button variant="outline" onClick={handleAddToInterest} disabled={!canBuy} className="flex-1">
             {added ? "✓" : "+ Interesse"}
           </Button>
-          <a
-            href={canBuy ? whatsappUrl : undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex-[2] ${!canBuy ? "pointer-events-none" : ""}`}
-          >
-            <Button variant="whatsapp" disabled={!canBuy} className="w-full">
-              <WhatsAppIcon className="h-4 w-4" />
-              {outOfStock ? "Esgotado" : "Comprar"}
-            </Button>
-          </a>
+          <Button variant="whatsapp" disabled={!canBuy} onClick={handleBuyClick} className="flex-[2]">
+            <WhatsAppIcon className="h-4 w-4" />
+            {outOfStock ? "Esgotado" : "Comprar"}
+          </Button>
         </div>
       </div>
     </div>

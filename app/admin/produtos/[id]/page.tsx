@@ -2,12 +2,12 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useCatalog } from "@/lib/catalog-context";
+import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { ItemForm } from "@/components/admin/item-form";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getItem } = useCatalog();
+  const { getItem } = useAdminCatalog();
   const item = getItem(id);
 
   if (!item) {

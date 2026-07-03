@@ -1,12 +1,12 @@
 "use client";
 
-import { useSettings } from "@/lib/settings-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "@/components/icons";
 
 export function WhatsAppFloatButton() {
-  const { settings } = useSettings();
-  const url = buildWhatsAppUrl(settings.whatsappNumber, settings.whatsappDefaultMessage);
+  const { catalog } = useCatalogView();
+  const url = buildWhatsAppUrl(catalog.whatsappNumber, catalog.whatsappDefaultMessage);
 
   return (
     <a
@@ -14,9 +14,9 @@ export function WhatsAppFloatButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Falar no WhatsApp"
-      className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#16a34a] text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 active:scale-95"
+      className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#16a34a] text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 active:scale-95 sm:bottom-5 sm:right-5 sm:h-14 sm:w-14"
     >
-      <WhatsAppIcon className="h-7 w-7" />
+      <WhatsAppIcon className="h-6 w-6 sm:h-7 sm:w-7" />
     </a>
   );
 }

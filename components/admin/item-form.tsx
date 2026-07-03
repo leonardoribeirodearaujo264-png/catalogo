@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useCatalog } from "@/lib/catalog-context";
+import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { generateId } from "@/lib/utils";
@@ -44,7 +44,7 @@ function toFormState(item?: CatalogItem, defaultCategoryId?: string): FormState 
 
 export function ItemForm({ item }: { item?: CatalogItem }) {
   const router = useRouter();
-  const { categories, addItem, updateItem, deleteItem } = useCatalog();
+  const { categories, addItem, updateItem, deleteItem } = useAdminCatalog();
   const [form, setForm] = useState<FormState>(() => toFormState(item, categories[0]?.id));
   const [saving, setSaving] = useState(false);
   const isEditing = !!item;

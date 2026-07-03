@@ -1,10 +1,10 @@
 "use client";
 
-import { useCatalog } from "@/lib/catalog-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { ProductGrid } from "@/components/product-grid";
 
 export function FeaturedItems() {
-  const { items } = useCatalog();
+  const { items } = useCatalogView();
   const featured = items.filter((i) => i.active && i.featured);
 
   if (featured.length === 0) return null;

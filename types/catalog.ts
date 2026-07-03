@@ -1,5 +1,6 @@
-// Tipos centrais do catálogo. Qualquer nicho (produto físico, serviço,
-// item com variações, etc.) é representado pela mesma forma de dados.
+// Tipos centrais do catálogo. A plataforma é multiusuário: cada Catalog
+// pertence a um usuário (dono do negócio) e tem seu próprio conjunto de
+// categorias, produtos/serviços e leads.
 
 export type ItemKind = "produto" | "servico";
 
@@ -13,6 +14,7 @@ export interface ItemVariation {
 
 export interface CatalogItem {
   id: string;
+  catalogId: string;
   slug: string;
   name: string;
   kind: ItemKind;
@@ -35,11 +37,13 @@ export interface CatalogItem {
 
 export interface Category {
   id: string;
+  catalogId: string;
   slug: string;
   name: string;
   description?: string;
   icon: string;
   order: number;
+  active: boolean;
 }
 
 export interface SocialLinks {
@@ -56,8 +60,12 @@ export interface BusinessAddress {
   zip?: string;
 }
 
-export interface StoreSettings {
-  brandName: string;
+/** O catálogo/loja de um usuário — equivalente ao antigo "StoreSettings", agora por usuário. */
+export interface Catalog {
+  id: string;
+  userId: string;
+  slug: string;
+  businessName: string;
   niche: string;
   tagline: string;
   heroTitle: string;
@@ -70,12 +78,24 @@ export interface StoreSettings {
   accentColor: string;
   address: BusinessAddress;
   social: SocialLinks;
+  isPublished: boolean;
 }
 
 export interface InterestListEntry {
+  catalogId: string;
   itemId: string;
   name: string;
   price: number;
   variationName?: string;
   quantity: number;
+}
+
+export interface Lead {
+  id: string;
+  catalogId: string;
+  customerName?: string;
+  customerPhone?: string;
+  items: InterestListEntry[];
+  message?: string;
+  createdAt: string;
 }

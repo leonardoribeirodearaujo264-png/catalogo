@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/app/providers";
-import { defaultSettings } from "@/data/settings";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: `${defaultSettings.brandName} | Catálogo Digital`,
-  description: `${defaultSettings.tagline} — ${defaultSettings.brandName}. Compre com segurança direto pelo WhatsApp.`,
+  title: "Catálogo Digital Universal",
+  description: "Crie seu catálogo digital e compartilhe um link com seus clientes. Funciona para qualquer negócio.",
 };
 
 export default function RootLayout({

@@ -1,11 +1,11 @@
 "use client";
 
-import { useCatalog } from "@/lib/catalog-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { ProductCard } from "@/components/product-card";
 import type { CatalogItem } from "@/types/catalog";
 
 export function ProductGrid({ items }: { items: CatalogItem[] }) {
-  const { getCategory } = useCatalog();
+  const { getCategory } = useCatalogView();
 
   if (items.length === 0) {
     return (

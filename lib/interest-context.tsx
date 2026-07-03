@@ -16,17 +16,18 @@ const INTEREST_KEY = "catalogo:interesse";
 
 interface InterestContextValue {
   entries: InterestListEntry[];
-  totalItems: number;
   addEntry: (entry: Omit<InterestListEntry, "quantity">) => void;
-  removeEntry: (itemId: string, variationName?: string) => void;
-  updateQuantity: (itemId: string, variationName: string | undefined, quantity: number) => void;
-  clear: () => void;
+  removeEntry: (catalogId: string, itemId: string, variationName?: string) => void;
+  updateQuantity: (catalogId: string, itemId: string, variationName: string | undefined, quantity: number) => void;
+  clear: (catalogId: string) => void;
+  entriesForCatalog: (catalogId: string) => InterestListEntry[];
+  totalItemsForCatalog: (catalogId: string) => number;
 }
 
 const InterestContext = createContext<InterestContextValue | null>(null);
 
-function sameEntry(a: InterestListEntry, itemId: string, variationName?: string) {
-  return a.itemId === itemId && (a.variationName ?? "") === (variationName ?? "");
+function sameEntry(a: InterestListEntry, catalogId: string, itemId: string, variationName?: string) {
+  return a.catalogId === catalogId && a.itemId === itemId && (a.variationName ?? "") === (variationName ?? "");
 }
 
 export function InterestProvider({ children }: { children: ReactNode }) {
@@ -47,10 +48,10 @@ export function InterestProvider({ children }: { children: ReactNode }) {
 
   const addEntry: InterestContextValue["addEntry"] = useCallback((entry) => {
     setEntries((prev) => {
-      const existing = prev.find((e) => sameEntry(e, entry.itemId, entry.variationName));
+      const existing = prev.find((e) => sameEntry(e, entry.catalogId, entry.itemId, entry.variationName));
       if (existing) {
         return prev.map((e) =>
-          sameEntry(e, entry.itemId, entry.variationName)
+          sameEntry(e, entry.catalogId, entry.itemId, entry.variationName)
             ? { ...e, quantity: e.quantity + 1 }
             : e,
         );
@@ -59,31 +60,38 @@ export function InterestProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeEntry: InterestContextValue["removeEntry"] = useCallback((itemId, variationName) => {
-    setEntries((prev) => prev.filter((e) => !sameEntry(e, itemId, variationName)));
+  const removeEntry: InterestContextValue["removeEntry"] = useCallback((catalogId, itemId, variationName) => {
+    setEntries((prev) => prev.filter((e) => !sameEntry(e, catalogId, itemId, variationName)));
   }, []);
 
   const updateQuantity: InterestContextValue["updateQuantity"] = useCallback(
-    (itemId, variationName, quantity) => {
+    (catalogId, itemId, variationName, quantity) => {
       setEntries((prev) =>
         prev
-          .map((e) => (sameEntry(e, itemId, variationName) ? { ...e, quantity } : e))
+          .map((e) => (sameEntry(e, catalogId, itemId, variationName) ? { ...e, quantity } : e))
           .filter((e) => e.quantity > 0),
       );
     },
     [],
   );
 
-  const clear = useCallback(() => setEntries([]), []);
+  const clear = useCallback((catalogId: string) => {
+    setEntries((prev) => prev.filter((e) => e.catalogId !== catalogId));
+  }, []);
 
-  const totalItems = useMemo(
-    () => entries.reduce((sum, e) => sum + e.quantity, 0),
+  const entriesForCatalog = useCallback(
+    (catalogId: string) => entries.filter((e) => e.catalogId === catalogId),
+    [entries],
+  );
+
+  const totalItemsForCatalog = useCallback(
+    (catalogId: string) => entries.filter((e) => e.catalogId === catalogId).reduce((sum, e) => sum + e.quantity, 0),
     [entries],
   );
 
   const value = useMemo(
-    () => ({ entries, totalItems, addEntry, removeEntry, updateQuantity, clear }),
-    [entries, totalItems, addEntry, removeEntry, updateQuantity, clear],
+    () => ({ entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog }),
+    [entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog],
   );
 
   return <InterestContext.Provider value={value}>{children}</InterestContext.Provider>;

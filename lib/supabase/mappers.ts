@@ -1,30 +1,77 @@
-import type { CatalogItem, Category, StoreSettings } from "@/types/catalog";
-import type { CategoryRow, ItemRow, StoreSettingsRow } from "./types";
+import type { CatalogItem, Category, Catalog } from "@/types/catalog";
+import type { CatalogRow, CategoryRow, ProductRow } from "./types";
+
+export function rowToCatalog(row: CatalogRow): Catalog {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    slug: row.slug,
+    businessName: row.business_name,
+    niche: row.niche,
+    tagline: row.tagline,
+    heroTitle: row.hero_title,
+    heroSubtitle: row.hero_subtitle,
+    logoUrl: row.logo_url ?? undefined,
+    bannerUrl: row.banner_url ?? undefined,
+    whatsappNumber: row.whatsapp_number,
+    whatsappDefaultMessage: row.whatsapp_default_message,
+    primaryColor: row.primary_color,
+    accentColor: row.accent_color,
+    address: row.address ?? {},
+    social: row.social ?? {},
+    isPublished: row.is_published,
+  };
+}
+
+export function catalogToRow(catalog: Partial<Catalog>): Partial<CatalogRow> {
+  const row: Partial<CatalogRow> = {};
+  if (catalog.slug !== undefined) row.slug = catalog.slug;
+  if (catalog.businessName !== undefined) row.business_name = catalog.businessName;
+  if (catalog.niche !== undefined) row.niche = catalog.niche;
+  if (catalog.tagline !== undefined) row.tagline = catalog.tagline;
+  if (catalog.heroTitle !== undefined) row.hero_title = catalog.heroTitle;
+  if (catalog.heroSubtitle !== undefined) row.hero_subtitle = catalog.heroSubtitle;
+  if (catalog.logoUrl !== undefined) row.logo_url = catalog.logoUrl;
+  if (catalog.bannerUrl !== undefined) row.banner_url = catalog.bannerUrl;
+  if (catalog.whatsappNumber !== undefined) row.whatsapp_number = catalog.whatsappNumber;
+  if (catalog.whatsappDefaultMessage !== undefined) row.whatsapp_default_message = catalog.whatsappDefaultMessage;
+  if (catalog.primaryColor !== undefined) row.primary_color = catalog.primaryColor;
+  if (catalog.accentColor !== undefined) row.accent_color = catalog.accentColor;
+  if (catalog.address !== undefined) row.address = catalog.address;
+  if (catalog.social !== undefined) row.social = catalog.social;
+  if (catalog.isPublished !== undefined) row.is_published = catalog.isPublished;
+  return row;
+}
 
 export function rowToCategory(row: CategoryRow): Category {
   return {
     id: row.id,
+    catalogId: row.catalog_id,
     slug: row.slug,
     name: row.name,
     description: row.description ?? undefined,
     icon: row.icon,
     order: row.order,
+    active: row.active,
   };
 }
 
 export function categoryToRow(cat: Partial<Category>): Partial<CategoryRow> {
   const row: Partial<CategoryRow> = {};
+  if (cat.catalogId !== undefined) row.catalog_id = cat.catalogId;
   if (cat.slug !== undefined) row.slug = cat.slug;
   if (cat.name !== undefined) row.name = cat.name;
   if (cat.description !== undefined) row.description = cat.description;
   if (cat.icon !== undefined) row.icon = cat.icon;
   if (cat.order !== undefined) row.order = cat.order;
+  if (cat.active !== undefined) row.active = cat.active;
   return row;
 }
 
-export function rowToItem(row: ItemRow): CatalogItem {
+export function rowToItem(row: ProductRow): CatalogItem {
   return {
     id: row.id,
+    catalogId: row.catalog_id,
     slug: row.slug,
     name: row.name,
     kind: row.kind,
@@ -43,8 +90,9 @@ export function rowToItem(row: ItemRow): CatalogItem {
   };
 }
 
-export function itemToRow(item: Partial<CatalogItem>): Partial<ItemRow> {
-  const row: Partial<ItemRow> = {};
+export function itemToRow(item: Partial<CatalogItem>): Partial<ProductRow> {
+  const row: Partial<ProductRow> = {};
+  if (item.catalogId !== undefined) row.catalog_id = item.catalogId;
   if (item.slug !== undefined) row.slug = item.slug;
   if (item.name !== undefined) row.name = item.name;
   if (item.kind !== undefined) row.kind = item.kind;
@@ -59,41 +107,5 @@ export function itemToRow(item: Partial<CatalogItem>): Partial<ItemRow> {
   if (item.active !== undefined) row.active = item.active;
   if (item.featured !== undefined) row.featured = item.featured;
   if (item.promotional !== undefined) row.promotional = item.promotional;
-  return row;
-}
-
-export function rowToSettings(row: StoreSettingsRow): StoreSettings {
-  return {
-    brandName: row.brand_name,
-    niche: row.niche,
-    tagline: row.tagline,
-    heroTitle: row.hero_title,
-    heroSubtitle: row.hero_subtitle,
-    logoUrl: row.logo_url ?? undefined,
-    bannerUrl: row.banner_url ?? undefined,
-    whatsappNumber: row.whatsapp_number,
-    whatsappDefaultMessage: row.whatsapp_default_message,
-    primaryColor: row.primary_color,
-    accentColor: row.accent_color,
-    address: row.address ?? {},
-    social: row.social ?? {},
-  };
-}
-
-export function settingsToRow(settings: Partial<StoreSettings>): Partial<StoreSettingsRow> {
-  const row: Partial<StoreSettingsRow> = {};
-  if (settings.brandName !== undefined) row.brand_name = settings.brandName;
-  if (settings.niche !== undefined) row.niche = settings.niche;
-  if (settings.tagline !== undefined) row.tagline = settings.tagline;
-  if (settings.heroTitle !== undefined) row.hero_title = settings.heroTitle;
-  if (settings.heroSubtitle !== undefined) row.hero_subtitle = settings.heroSubtitle;
-  if (settings.logoUrl !== undefined) row.logo_url = settings.logoUrl;
-  if (settings.bannerUrl !== undefined) row.banner_url = settings.bannerUrl;
-  if (settings.whatsappNumber !== undefined) row.whatsapp_number = settings.whatsappNumber;
-  if (settings.whatsappDefaultMessage !== undefined) row.whatsapp_default_message = settings.whatsappDefaultMessage;
-  if (settings.primaryColor !== undefined) row.primary_color = settings.primaryColor;
-  if (settings.accentColor !== undefined) row.accent_color = settings.accentColor;
-  if (settings.address !== undefined) row.address = settings.address;
-  if (settings.social !== undefined) row.social = settings.social;
   return row;
 }

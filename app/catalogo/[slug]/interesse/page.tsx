@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { useInterestList } from "@/lib/interest-context";
-import { useSettings } from "@/lib/settings-context";
 import { Button } from "@/components/ui/button";
 import { WhatsAppIcon } from "@/components/icons";
 import { buildInterestListMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/utils";
 
 export default function InterestListPage() {
-  const { entries, updateQuantity, removeEntry, clear } = useInterestList();
-  const { settings } = useSettings();
+  const { catalog } = useCatalogView();
+  const { entriesForCatalog, updateQuantity, removeEntry, clear } = useInterestList();
+  const entries = entriesForCatalog(catalog.id);
+  const base = `/catalogo/${catalog.slug}`;
 
   const total = entries.reduce((sum, e) => sum + e.price * e.quantity, 0);
-  const message = buildInterestListMessage(settings.whatsappDefaultMessage, entries);
-  const whatsappUrl = buildWhatsAppUrl(settings.whatsappNumber, message);
+  const message = buildInterestListMessage(catalog.whatsappDefaultMessage, entries);
+  const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, message);
 
   return (
     <div className="container-app py-10">
@@ -28,7 +30,7 @@ export default function InterestListPage() {
           <span className="text-4xl">🛍️</span>
           <h2 className="text-lg font-bold text-gray-900">Sua lista está vazia</h2>
           <p className="text-sm text-gray-500">Adicione itens a partir da página de cada produto ou serviço.</p>
-          <Link href="/catalogo" className="text-sm font-semibold text-brand-accent">
+          <Link href={base} className="text-sm font-semibold text-brand-accent">
             Ver catálogo →
           </Link>
         </div>
@@ -50,21 +52,21 @@ export default function InterestListPage() {
                   <div className="flex items-center rounded-lg border border-gray-300">
                     <button
                       className="h-8 w-8 text-gray-600 hover:bg-gray-50"
-                      onClick={() => updateQuantity(entry.itemId, entry.variationName, entry.quantity - 1)}
+                      onClick={() => updateQuantity(catalog.id, entry.itemId, entry.variationName, entry.quantity - 1)}
                     >
                       −
                     </button>
                     <span className="w-8 text-center text-sm font-bold">{entry.quantity}</span>
                     <button
                       className="h-8 w-8 text-gray-600 hover:bg-gray-50"
-                      onClick={() => updateQuantity(entry.itemId, entry.variationName, entry.quantity + 1)}
+                      onClick={() => updateQuantity(catalog.id, entry.itemId, entry.variationName, entry.quantity + 1)}
                     >
                       +
                     </button>
                   </div>
                   <button
                     className="text-xs font-semibold text-red-500 hover:text-red-700"
-                    onClick={() => removeEntry(entry.itemId, entry.variationName)}
+                    onClick={() => removeEntry(catalog.id, entry.itemId, entry.variationName)}
                   >
                     Remover
                   </button>
@@ -72,7 +74,7 @@ export default function InterestListPage() {
               </div>
             ))}
 
-            <button onClick={clear} className="text-xs font-semibold text-gray-400 hover:text-gray-700">
+            <button onClick={() => clear(catalog.id)} className="text-xs font-semibold text-gray-400 hover:text-gray-700">
               Esvaziar lista
             </button>
           </div>

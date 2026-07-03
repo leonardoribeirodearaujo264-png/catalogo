@@ -1,24 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useCatalog } from "@/lib/catalog-context";
-import { useSettings } from "@/lib/settings-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export function SiteFooter() {
-  const { settings } = useSettings();
-  const { categories } = useCatalog();
+  const { catalog, categories } = useCatalogView();
   const year = new Date().getFullYear();
-  const whatsappUrl = buildWhatsAppUrl(settings.whatsappNumber, settings.whatsappDefaultMessage);
-  const address = settings.address;
+  const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, catalog.whatsappDefaultMessage);
+  const address = catalog.address;
   const hasAddress = address.street || address.city;
+  const base = `/catalogo/${catalog.slug}`;
 
   return (
     <footer className="border-t border-gray-200 bg-gray-950 text-gray-300">
       <div className="container-app grid gap-10 py-14 md:grid-cols-3">
         <div>
-          <h3 className="text-lg font-bold text-white">{settings.brandName}</h3>
-          <p className="mt-2 text-sm text-gray-400">{settings.tagline}</p>
+          <h3 className="text-lg font-bold text-white">{catalog.businessName}</h3>
+          <p className="mt-2 text-sm text-gray-400">{catalog.tagline}</p>
           {hasAddress && (
             <p className="mt-4 text-sm text-gray-400">
               {address.street}
@@ -34,7 +33,7 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-sm">
             {categories.slice(0, 6).map((cat) => (
               <li key={cat.id}>
-                <Link href={`/catalogo?categoria=${cat.slug}`} className="text-gray-400 hover:text-white">
+                <Link href={`${base}?categoria=${cat.slug}`} className="text-gray-400 hover:text-white">
                   {cat.icon} {cat.name}
                 </Link>
               </li>
@@ -48,18 +47,18 @@ export function SiteFooter() {
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block font-semibold text-green-400 hover:text-green-300">
               WhatsApp
             </a>
-            {settings.social.instagram && (
-              <a href={settings.social.instagram} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
+            {catalog.social.instagram && (
+              <a href={catalog.social.instagram} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
                 Instagram
               </a>
             )}
-            {settings.social.facebook && (
-              <a href={settings.social.facebook} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
+            {catalog.social.facebook && (
+              <a href={catalog.social.facebook} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
                 Facebook
               </a>
             )}
-            {settings.social.tiktok && (
-              <a href={settings.social.tiktok} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
+            {catalog.social.tiktok && (
+              <a href={catalog.social.tiktok} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">
                 TikTok
               </a>
             )}
@@ -69,7 +68,7 @@ export function SiteFooter() {
 
       <div className="border-t border-white/10 py-5">
         <p className="container-app text-center text-xs text-gray-500">
-          © {year} {settings.brandName}. Catálogo digital universal — feito para qualquer nicho de negócio.
+          © {year} {catalog.businessName}. Catálogo digital universal — feito para qualquer nicho de negócio.
         </p>
       </div>
     </footer>

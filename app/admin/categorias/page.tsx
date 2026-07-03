@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useCatalog } from "@/lib/catalog-context";
+import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import type { Category } from "@/types/catalog";
 
-const EMPTY = { name: "", icon: "🏷️", description: "" };
+const EMPTY = { name: "", icon: "🏷️", description: "", active: true };
 
 export default function AdminCategoriesPage() {
-  const { categories, items, addCategory, updateCategory, deleteCategory } = useCatalog();
+  const { categories, items, addCategory, updateCategory, deleteCategory, loading } = useAdminCatalog();
   const [newCat, setNewCat] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Category>>({});
+
+  if (loading) return <p className="text-sm text-gray-400">Carregando...</p>;
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();

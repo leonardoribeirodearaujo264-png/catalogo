@@ -4,31 +4,30 @@ import Link from "next/link";
 import { useState } from "react";
 import { CartIcon, CloseIcon, MenuIcon } from "@/components/icons";
 import { useInterestList } from "@/lib/interest-context";
-import { useSettings } from "@/lib/settings-context";
+import { useCatalogView } from "@/lib/catalog-view-context";
 
 export function SiteHeader() {
-  const { settings } = useSettings();
-  const { totalItems } = useInterestList();
+  const { catalog } = useCatalogView();
+  const { totalItemsForCatalog } = useInterestList();
+  const totalItems = totalItemsForCatalog(catalog.id);
   const [open, setOpen] = useState(false);
 
-  const navLinks = [
-    { href: "/", label: "Início" },
-    { href: "/catalogo", label: "Catálogo" },
-  ];
+  const base = `/catalogo/${catalog.slug}`;
+  const navLinks = [{ href: base, label: "Catálogo" }];
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
       <div className="container-app flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex min-w-0 items-center gap-2 font-extrabold text-gray-900">
-          {settings.logoUrl ? (
+        <Link href={base} className="flex min-w-0 items-center gap-2 font-extrabold text-gray-900">
+          {catalog.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={settings.logoUrl} alt={settings.brandName} className="h-9 w-9 rounded-lg object-cover" />
+            <img src={catalog.logoUrl} alt={catalog.businessName} className="h-9 w-9 rounded-lg object-cover" />
           ) : (
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-sm text-white">
-              {settings.brandName.slice(0, 2).toUpperCase()}
+              {catalog.businessName.slice(0, 2).toUpperCase()}
             </span>
           )}
-          <span className="truncate text-lg">{settings.brandName}</span>
+          <span className="truncate text-lg">{catalog.businessName}</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
@@ -37,14 +36,11 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/admin" className="text-sm font-semibold text-gray-400 hover:text-gray-900">
-            Painel Admin
-          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
           <Link
-            href="/interesse"
+            href={`${base}/interesse`}
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-700 hover:bg-gray-100"
             aria-label="Lista de interesse"
           >
@@ -79,13 +75,6 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/admin"
-              className="rounded-lg px-2 py-2.5 text-sm font-semibold text-gray-400 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
-            >
-              Painel Admin
-            </Link>
           </div>
         </div>
       )}

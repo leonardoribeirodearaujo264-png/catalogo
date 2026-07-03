@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCatalog } from "@/lib/catalog-context";
+import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
 export default function AdminProductsPage() {
-  const { items, getCategory } = useCatalog();
+  const { items, getCategory, loading } = useAdminCatalog();
+
+  if (loading) return <p className="text-sm text-gray-400">Carregando...</p>;
 
   return (
     <div>

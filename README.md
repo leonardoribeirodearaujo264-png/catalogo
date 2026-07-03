@@ -1,42 +1,35 @@
-# Catálogo Digital Universal (RR Repuxação)
+# Catálogo Digital Universal
 
-Aplicação em **Next.js** para criação de catálogos digitais adaptáveis a **qualquer nicho de negócio**: lojas de roupas, restaurantes, delivery, cosméticos, eletrônicos, serviços, papelarias, conveniências, salões, clínicas, profissionais autônomos, escritórios e muito mais.
+Plataforma multiusuário em **Next.js**: qualquer pessoa cria uma conta, monta seu próprio catálogo digital (produtos, serviços, categorias, marca) e recebe um link público para compartilhar no WhatsApp, Instagram etc. Funciona para qualquer nicho — lojas de roupas, restaurantes, delivery, cosméticos, eletrônicos, serviços, papelarias, conveniências, salões, clínicas, profissionais autônomos, escritórios, entre outros.
 
-Cadastre produtos, serviços, categorias, preços, imagens, descrições e variações, e finalize as vendas direto pelo **WhatsApp**.
+## Como funciona
 
-> Este projeto nasceu como a modernização do antigo catálogo em PHP "Podz Express", reescrito do zero em Next.js com arquitetura limpa e escalável. A marca padrão configurada é **RR Repuxação**, mas nada no código está preso a esse nicho — troque tudo em `/admin/configuracoes`.
+- **Visitante**: abre `/catalogo/{slug}` de um negócio e só vê a vitrine pública (produtos/serviços ativos, categorias, busca, botão de WhatsApp). Nunca vê nada do painel administrativo.
+- **Dono do negócio (admin)**: cria conta em `/register`, faz login em `/login` e gerencia o próprio catálogo em `/admin` — protegido, só acessível autenticado. RLS no banco garante que cada usuário só lê/edita os próprios dados.
 
 ## Tecnologias
 
 - [Next.js](https://nextjs.org/) (App Router) + React + TypeScript
 - [Tailwind CSS v4](https://tailwindcss.com/)
-- [Supabase](https://supabase.com/) como banco de dados (opcional — veja abaixo)
+- [Supabase](https://supabase.com/) (Auth + banco de dados via Postgres/RLS) — **obrigatório**, a autenticação depende dele
 - Pronto para deploy na [Vercel](https://vercel.com/)
 
 ## Estrutura de pastas
 
 ```
-app/                    # Rotas (App Router)
-  (site)/               # Site público: home, catálogo, produto, lista de interesse
-  admin/                 # Painel administrativo
-components/            # Componentes React (site, admin, ui/)
-lib/                    # Contextos (catálogo, configurações, interesse), Supabase, utils
-data/                   # Dados mockados (categorias, itens, configurações padrão)
-types/                  # Tipos TypeScript compartilhados
-supabase/               # schema.sql e seed.sql para o banco de dados
-public/                 # Arquivos estáticos
+app/
+  page.tsx                    # landing page do sistema (não é um catálogo)
+  login/, register/           # autenticação
+  catalogo/[slug]/             # vitrine pública de cada negócio (SSR)
+  admin/                       # painel administrativo (protegido)
+components/                   # componentes React (site, admin, ui/)
+lib/                           # auth, contexts, Supabase, utils
+types/                         # tipos TypeScript compartilhados
+supabase/                      # schema.sql e seed.sql
+proxy.ts                       # protege /admin, /login, /register (ver nota abaixo)
 ```
 
-## Funcionalidades
-
-- Página inicial com banner, categorias e itens em destaque
-- Catálogo completo com busca e filtro por categoria
-- Página de detalhe de produto/serviço com variações (tamanho, sabor, pacote de serviço etc.)
-- Botão de compra pelo WhatsApp com mensagem automática (produto + variação + preço)
-- Lista de interesse (carrinho simples) que gera uma mensagem consolidada para o WhatsApp
-- Painel `/admin` para cadastrar, editar e excluir produtos/serviços e categorias
-- `/admin/configuracoes` para personalizar marca, logo, cores, banner, nicho, WhatsApp, endereço e redes sociais
-- Totalmente responsivo (celular, tablet, desktop)
+> **Nota sobre `proxy.ts`**: o Next.js 16 renomeou o arquivo `middleware.ts` para `proxy.ts` (mesma função, nome novo). É ele quem redireciona visitantes sem sessão para `/login` ao tentar acessar `/admin`, e quem redireciona quem já está logado para longe de `/login`/`/register`.
 
 ## Como rodar localmente
 
@@ -45,15 +38,7 @@ npm install
 npm run dev
 ```
 
-Acesse:
-
-```
-http://localhost:3000
-```
-
-Sem nenhuma configuração adicional, o app já funciona com **dados mockados** (arquivos em `/data`), guardando as edições feitas no `/admin` no `localStorage` do navegador.
-
-Outros comandos úteis:
+Acesse `http://localhost:3000`.
 
 ```bash
 npm run build   # build de produção
@@ -61,48 +46,40 @@ npm run start   # roda o build de produção localmente
 npm run lint    # checagem de lint
 ```
 
-## Conectar ao Supabase (opcional, recomendado)
+## Configurar o Supabase (obrigatório)
 
-O projeto já vem com o cliente do Supabase integrado. Quando as variáveis de ambiente abaixo estão presentes, o catálogo e o painel admin passam a ler e escrever direto no banco; sem elas, tudo continua funcionando com os dados mockados.
+A autenticação e todos os dados do catálogo dependem do Supabase — não há modo 100% mockado nesta versão multiusuário.
 
 1. Crie um projeto em [supabase.com](https://supabase.com/).
-2. Em **Project Settings > API**, copie a **Project URL** e a **Publishable key** (ou a `anon key`, em projetos mais antigos).
-3. Copie `.env.example` para `.env.local` e preencha:
+2. Em **Authentication → Providers → Email**, **desative "Confirm email"**. Isso é essencial: sem isso, o cadastro em `/register` não faz login automático (fica esperando confirmação por e-mail).
+3. Em **Project Settings → API**, copie a **Project URL** e a **Publishable key** (ou `anon key`, em projetos mais antigos).
+4. Copie `.env.example` para `.env.local` e preencha:
 
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
 
-4. Abra o **SQL Editor** do seu projeto Supabase e rode um dos dois:
-   - `supabase/setup.sql` — arquivo único, cria as tabelas + RLS e já carrega os dados de exemplo (mais rápido).
-   - ou, separadamente: `supabase/schema.sql` (tabelas + RLS) e depois `supabase/seed.sql` (dados de exemplo, opcional).
-5. Reinicie `npm run dev`.
+5. Abra o **SQL Editor** do projeto e rode `supabase/schema.sql` — cria as tabelas `catalogs`, `categories`, `products`, `leads` e as policies de RLS (cada usuário só acessa o próprio catálogo).
+6. Rode `npm run dev`, acesse `/register` e crie uma conta informando o nome do negócio, e-mail e senha. Isso já cria seu catálogo automaticamente (login automático, direto no painel).
+7. (Opcional) Para carregar os 12 itens de exemplo cobrindo vários nichos: cadastre-se com o nome do negócio **"RR Repuxação"** e rode `supabase/seed.sql` no SQL Editor — ele encontra o catálogo pelo slug `rr-repuxacao` gerado no cadastro e também aplica a logo de exemplo (`public/logo-rr.png`). Se usou outro nome, troque o slug no topo do arquivo.
 
-> ⚠️ **Segurança**: o painel `/admin` ainda não tem tela de login. As policies de RLS em `schema.sql` liberam leitura e escrita para a chave pública só para o catálogo funcionar de ponta a ponta sem backend próprio. Antes de usar em produção com dados reais, adicione autenticação (ex.: Supabase Auth) e restrinja as policies de escrita a usuários autenticados.
->
-> Nunca exponha a `service_role key` do Supabase no navegador nem em variáveis `NEXT_PUBLIC_*` — ela ignora todo o RLS.
+## Segurança
+
+- Cada linha de `catalogs`, `categories`, `products` e `leads` só é editável pelo próprio dono (`auth.uid() = catalogs.user_id`, verificado via RLS no Postgres) — a proteção real não depende do código do Next.js, é imposta pelo banco.
+- Visitantes anônimos só leem catálogos com `is_published = true` e itens/categorias com `active = true`.
+- `leads` aceita inserção pública (para registrar quando alguém clica em "Comprar pelo WhatsApp"), mas só o dono do catálogo consegue listar (`/admin/pedidos`).
+- Nunca exponha a `service_role key` do Supabase no navegador nem em variáveis `NEXT_PUBLIC_*` — ela ignora todo o RLS.
 
 ## Deploy na Vercel
 
-1. Suba o projeto para o GitHub (veja abaixo).
+1. Suba o projeto para o GitHub.
 2. Importe o repositório em [vercel.com/new](https://vercel.com/new).
-3. Se estiver usando Supabase, configure as variáveis de ambiente do passo anterior em **Project Settings > Environment Variables** na Vercel.
+3. Configure as variáveis de ambiente do Supabase (mesmas do `.env.local`) em **Project Settings → Environment Variables**.
 4. Clique em **Deploy**.
 
-## Preparar para o GitHub
+## Rotas
 
-```bash
-git init
-git add .
-git commit -m "Catálogo digital universal em Next.js"
-git branch -M main
-git remote add origin <url-do-seu-repositorio>
-git push -u origin main
-```
+Públicas: `/`, `/login`, `/register`, `/catalogo/[slug]`, `/catalogo/[slug]/produto/[id]`, `/catalogo/[slug]/interesse`.
 
-O `.gitignore` já exclui `node_modules`, `.next`, arquivos `.env*` (exceto `.env.example`) e outros artefatos de build.
-
-## Personalização
-
-Tudo que identifica visualmente a marca fica em `/admin/configuracoes`: nome, nicho, logo, banner, cores, textos da página inicial, número de WhatsApp, endereço e redes sociais — sem precisar mexer em código. Para trocar os dados de exemplo, edite `/data/categories.ts` e `/data/products.ts` (ou as tabelas do Supabase, se estiver conectado).
+Privadas (exigem login): `/admin`, `/admin/produtos`, `/admin/categorias`, `/admin/configuracoes`, `/admin/link-publico`, `/admin/pedidos`.

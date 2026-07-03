@@ -1,32 +1,36 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useSettings } from "@/lib/settings-context";
+import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { StoreSettings } from "@/types/catalog";
+import type { Catalog } from "@/types/catalog";
 
 export default function AdminSettingsPage() {
-  const { settings, updateSettings, resetToDefaults } = useSettings();
-  const [draft, setDraft] = useState<StoreSettings>(settings);
+  const { catalog, updateCatalog, loading } = useAdminCatalog();
+  const [draft, setDraft] = useState<Catalog | null>(catalog);
+  const [synced, setSynced] = useState(catalog);
   const [saved, setSaved] = useState(false);
-  const [syncedSettings, setSyncedSettings] = useState(settings);
 
-  // Re-sincroniza o rascunho quando `settings` muda por fora (hidratação do
-  // localStorage ou "Restaurar padrão"), sem sobrescrever o que o usuário
-  // está digitando a cada render.
-  if (settings !== syncedSettings) {
-    setSyncedSettings(settings);
-    setDraft(settings);
+  // Re-sincroniza o rascunho quando `catalog` muda por fora (primeiro
+  // carregamento), sem sobrescrever o que o usuário está digitando.
+  if (catalog !== synced) {
+    setSynced(catalog);
+    setDraft(catalog);
   }
 
-  function patch(fields: Partial<StoreSettings>) {
-    setDraft((prev) => ({ ...prev, ...fields }));
+  if (loading || !draft) {
+    return <p className="text-sm text-gray-400">Carregando...</p>;
+  }
+
+  function patch(fields: Partial<Catalog>) {
+    setDraft((prev) => (prev ? { ...prev, ...fields } : prev));
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await updateSettings(draft);
+    if (!draft) return;
+    await updateCatalog(draft);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -42,8 +46,8 @@ export default function AdminSettingsPage() {
         <section className="rounded-2xl border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-sm font-bold text-gray-900">Identidade da marca</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nome da marca">
-              <Input value={draft.brandName} onChange={(e) => patch({ brandName: e.target.value })} />
+            <Field label="Nome do negócio">
+              <Input value={draft.businessName} onChange={(e) => patch({ businessName: e.target.value })} />
             </Field>
             <Field label="Nicho / segmento" hint="Aparece como selo no banner principal.">
               <Input value={draft.niche} onChange={(e) => patch({ niche: e.target.value })} placeholder="Ex: Moda feminina, Clínica odontológica..." />
@@ -128,7 +132,6 @@ export default function AdminSettingsPage() {
 
         <div className="flex items-center gap-3">
           <Button type="submit">{saved ? "Salvo ✓" : "Salvar configurações"}</Button>
-          <Button type="button" variant="outline" onClick={resetToDefaults}>Restaurar padrão</Button>
         </div>
       </form>
     </div>
