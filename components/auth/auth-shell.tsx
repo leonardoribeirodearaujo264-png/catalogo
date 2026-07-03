@@ -11,10 +11,10 @@ export function AuthShell({
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] px-4 py-10 sm:py-16">
-      {/* glows decorativos */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-red-600/25 blur-[110px]" />
-      <div className="pointer-events-none absolute -bottom-24 -right-16 h-[300px] w-[300px] rounded-full bg-red-500/10 blur-[100px]" />
-      <div className="pointer-events-none absolute -bottom-24 -left-16 h-[260px] w-[260px] rounded-full bg-white/5 blur-[100px]" />
+      {/* glows decorativos — blur moderado de propósito, pra não pesar em celulares mais fracos */}
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-red-600/25 blur-[70px]" />
+      <div className="pointer-events-none absolute -bottom-24 -right-16 h-[260px] w-[260px] rounded-full bg-red-500/10 blur-[60px]" />
+      <div className="pointer-events-none absolute -bottom-24 -left-16 h-[220px] w-[220px] rounded-full bg-white/5 blur-[60px]" />
 
       <div className="relative w-full max-w-[420px] animate-fade-in-up">
         <div className="mb-7 flex flex-col items-center gap-4 text-center">

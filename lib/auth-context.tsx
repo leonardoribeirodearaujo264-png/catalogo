@@ -24,22 +24,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let active = true;
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (active) {
-        setUser(data.user ?? null);
-        setLoading(false);
-      }
-    });
-
+    // onAuthStateChange já dispara uma vez de imediato com a sessão local
+    // (evento INITIAL_SESSION, sem round-trip de rede) e depois a cada
+    // mudança — não precisa de um getUser() extra só para o estado inicial,
+    // isso só duplicava uma chamada de rede ao servidor de auth e deixava
+    // o app mais lento pra "entrar", principalmente em conexões móveis.
+    // A verificação que realmente importa pra segurança (getUser() com
+    // validação no servidor) já acontece no proxy.ts antes da página
+    // carregar, e o RLS protege cada operação no banco de qualquer forma.
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
-      active = false;
       subscription.subscription.unsubscribe();
     };
   }, []);

@@ -7,6 +7,7 @@ import { getBrowserClient } from "@/lib/supabase/browser-client";
 import { insertOrder } from "@/lib/supabase/queries";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
+import { DiscountBadge } from "@/components/discount-badge";
 import { Button } from "@/components/ui/button";
 import { CloseIcon, WhatsAppIcon } from "@/components/icons";
 import { buildItemInterestMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -105,9 +106,9 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
           >
             <CloseIcon className="h-4 w-4" />
           </button>
-          <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+          <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
             {item.kind === "servico" && <Badge tone="dark">Serviço</Badge>}
-            {outOfStock ? <Badge tone="gray">Esgotado</Badge> : hasDiscount ? <Badge tone="green">-{discountPct}%</Badge> : null}
+            {outOfStock ? <Badge tone="gray">Esgotado</Badge> : hasDiscount ? <DiscountBadge percent={discountPct} /> : null}
           </div>
         </div>
 
@@ -117,9 +118,9 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
 
           <div className="mt-2">
             {hasDiscount && (
-              <span className="mr-1.5 text-sm font-semibold text-gray-400 line-through">{formatPrice(item.priceCompare!)}</span>
+              <span className="mr-1.5 text-sm font-semibold text-red-500 line-through">{formatPrice(item.priceCompare!)}</span>
             )}
-            <span className="text-2xl font-extrabold text-gray-900">{formatPrice(finalPrice)}</span>
+            <span className="text-2xl font-extrabold text-green-600">{formatPrice(finalPrice)}</span>
           </div>
 
           {item.description && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-600">{item.description}</p>}
@@ -157,7 +158,7 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
             </Button>
             <Button variant="whatsapp" size="lg" className="w-full" disabled={!canAct || sendingWhatsApp} onClick={handleWhatsAppBuy}>
               <WhatsAppIcon className="h-4 w-4" />
-              {sendingWhatsApp ? "Enviando..." : "Enviar pelo WhatsApp"}
+              {sendingWhatsApp ? "Enviando..." : "Comprar pelo WhatsApp"}
             </Button>
           </div>
         </div>

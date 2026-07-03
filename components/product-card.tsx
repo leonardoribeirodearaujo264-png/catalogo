@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
+import { DiscountBadge } from "@/components/discount-badge";
 import { WhatsAppIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem, Category } from "@/types/catalog";
@@ -60,43 +61,42 @@ export function ProductCard({
           alt={item.name}
           className="transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute left-2 top-2 flex flex-col gap-1.5">
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1.5">
           {item.kind === "servico" && <Badge tone="dark">Serviço</Badge>}
-          {outOfStock ? (
-            <Badge tone="gray">Esgotado</Badge>
-          ) : hasDiscount ? (
-            <Badge tone="green">-{discountPct}%</Badge>
-          ) : null}
+          {outOfStock ? <Badge tone="gray">Esgotado</Badge> : hasDiscount ? <DiscountBadge percent={discountPct} /> : null}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3.5 sm:p-4">
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
         <h3 className="line-clamp-2 text-sm font-bold text-gray-900">{item.name}</h3>
 
-        <div className="pt-1">
+        <div className="pt-0.5">
           {hasDiscount && (
-            <div className="text-[11px] font-semibold text-gray-400 line-through">{formatPrice(item.priceCompare!)}</div>
+            <div className="text-xs font-semibold text-red-500 line-through">{formatPrice(item.priceCompare!)}</div>
           )}
-          <div className="truncate text-base font-extrabold text-gray-900">{formatPrice(item.price)}</div>
+          <div className="truncate text-lg font-extrabold text-green-600">{formatPrice(item.price)}</div>
         </div>
 
-        <div className="mt-auto flex items-center gap-1.5 pt-3">
+        <div className="mt-auto flex flex-col gap-2 pt-3">
           <button
             type="button"
             onClick={handleAddClick}
             disabled={outOfStock}
-            className="flex-1 rounded-full bg-gray-900 px-2.5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[44px] w-full rounded-xl bg-gray-900 px-3 py-2.5 text-sm font-bold text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {added ? "✓ Adicionado" : outOfStock ? "Esgotado" : "Adicionar"}
+            {added ? "✓ Adicionado" : outOfStock ? "Esgotado" : "+ Adicionar"}
           </button>
           <button
             type="button"
             onClick={handleWhatsAppClick}
             disabled={outOfStock}
-            aria-label="Enviar pelo WhatsApp"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#16a34a] text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#16a34a] px-3 py-2.5 text-sm font-bold text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <WhatsAppIcon className="h-3.5 w-3.5" />
+            <WhatsAppIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              <span className="sm:hidden">WhatsApp</span>
+              <span className="hidden sm:inline">Comprar pelo WhatsApp</span>
+            </span>
           </button>
         </div>
       </div>
