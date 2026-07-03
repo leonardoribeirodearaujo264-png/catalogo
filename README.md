@@ -69,7 +69,7 @@ A autenticação e todos os dados do catálogo dependem do Supabase — não há
 - Cada linha de `cd_catalogs`, `cd_categories`, `cd_products` e `cd_leads` só é editável pelo próprio dono (`auth.uid() = cd_catalogs.user_id`, verificado via RLS no Postgres) — a proteção real não depende do código do Next.js, é imposta pelo banco.
 - Upload de imagens vai para o bucket `catalog-images` (Supabase Storage), dentro de uma pasta por catálogo (`{catalog_id}/arquivo.jpg`). RLS de storage garante que só o dono do catálogo envia/troca/apaga arquivos na própria pasta; leitura é pública (necessário para as imagens aparecerem no catálogo sem login).
 - Visitantes anônimos só leem catálogos com `is_published = true` e itens/categorias com `active = true`.
-- `leads` aceita inserção pública (para registrar quando alguém clica em "Comprar pelo WhatsApp"), mas só o dono do catálogo consegue listar (`/admin/pedidos`).
+- `cd_leads` (pedidos) aceita inserção pública — o carrinho/produto grava o pedido antes de abrir o WhatsApp — mas só o dono do catálogo consegue listar, editar e apagar (`/admin/pedidos`).
 - Nunca exponha a `service_role key` do Supabase no navegador nem em variáveis `NEXT_PUBLIC_*` — ela ignora todo o RLS.
 
 ## Deploy na Vercel
@@ -81,13 +81,19 @@ A autenticação e todos os dados do catálogo dependem do Supabase — não há
 
 ## Rotas
 
-Públicas: `/`, `/login`, `/register`, `/catalogo/[slug]`, `/catalogo/[slug]/produto/[id]`, `/catalogo/[slug]/interesse`.
+Públicas: `/`, `/login`, `/register`, `/catalogo/[slug]`.
 
 Privadas (exigem login): `/admin`, `/admin/produtos`, `/admin/categorias`, `/admin/configuracoes`, `/admin/link-publico`, `/admin/pedidos`, `/admin/financeiro`, `/admin/financeiro/novo`, `/admin/financeiro/receitas`, `/admin/financeiro/despesas`, `/admin/financeiro/relatorios`.
 
+## Carrinho e pedidos
+
+No catálogo público, cada item tem dois botões: **Adicionar** (vai para o carrinho lateral, com quantidade/remover/finalizar) e o ícone do **WhatsApp** (envia só aquele item direto, sem passar pelo carrinho). Em qualquer um dos dois casos, o pedido é salvo em `cd_leads` **antes** de abrir o WhatsApp — é isso que alimenta `/admin/pedidos`.
+
+Em `/admin/pedidos`, o dono do catálogo marca cada pedido como **vendido** (informando valor final, forma de pagamento e data — isso já cria o lançamento de receita correspondente no financeiro), **perdido** ou deixa **pendente**; também dá para editar dados do cliente, reabrir, excluir e filtrar por status.
+
 ## Financeiro
 
-Cada usuário tem seu próprio módulo financeiro (`cd_financial_transactions`), 100% privado — nem o catálogo público nem outros usuários enxergam esses dados. Dashboard com receitas/despesas do mês, saldo, pendências, atrasados, últimos lançamentos e um gráfico simples dos últimos 6 meses.
+Cada usuário tem seu próprio módulo financeiro (`cd_financial_transactions`), 100% privado — nem o catálogo público nem outros usuários enxergam esses dados. Lançamentos podem vir de um pedido (`order_id`) ou ser criados manualmente. Dashboard com receitas/despesas do mês, saldo, pendências, atrasados, últimos lançamentos e um gráfico simples dos últimos 6 meses.
 
 ## Layout do catálogo
 

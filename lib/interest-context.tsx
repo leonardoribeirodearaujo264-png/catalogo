@@ -22,6 +22,9 @@ interface InterestContextValue {
   clear: (catalogId: string) => void;
   entriesForCatalog: (catalogId: string) => InterestListEntry[];
   totalItemsForCatalog: (catalogId: string) => number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const InterestContext = createContext<InterestContextValue | null>(null);
@@ -33,6 +36,9 @@ function sameEntry(a: InterestListEntry, catalogId: string, itemId: string, vari
 export function InterestProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<InterestListEntry[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   useEffect(() => {
     // Lê o localStorage só depois da montagem para o HTML da hidratação
@@ -90,8 +96,19 @@ export function InterestProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog }),
-    [entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog],
+    () => ({
+      entries,
+      addEntry,
+      removeEntry,
+      updateQuantity,
+      clear,
+      entriesForCatalog,
+      totalItemsForCatalog,
+      isCartOpen,
+      openCart,
+      closeCart,
+    }),
+    [entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog, isCartOpen, openCart, closeCart],
   );
 
   return <InterestContext.Provider value={value}>{children}</InterestContext.Provider>;

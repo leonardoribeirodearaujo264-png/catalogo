@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
+import { WhatsAppIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem, Category } from "@/types/catalog";
 
@@ -11,13 +12,15 @@ export function ProductListItem({
   category,
   added,
   onOpen,
-  onQuickAdd,
+  onAddToCart,
+  onWhatsAppBuy,
 }: {
   item: CatalogItem;
   category?: Category;
   added?: boolean;
   onOpen: (item: CatalogItem) => void;
-  onQuickAdd: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem) => void;
+  onWhatsAppBuy: (item: CatalogItem) => void;
 }) {
   const hasDiscount = !!item.priceCompare && item.priceCompare > item.price;
   const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceCompare!) * 100) : 0;
@@ -31,7 +34,17 @@ export function ProductListItem({
       onOpen(item);
       return;
     }
-    onQuickAdd(item);
+    onAddToCart(item);
+  }
+
+  function handleWhatsAppClick(e: MouseEvent) {
+    e.stopPropagation();
+    if (outOfStock) return;
+    if (needsVariation) {
+      onOpen(item);
+      return;
+    }
+    onWhatsAppBuy(item);
   }
 
   return (
@@ -61,14 +74,25 @@ export function ProductListItem({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleAddClick}
-        disabled={outOfStock}
-        className="shrink-0 rounded-full bg-gray-900 px-3.5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {added ? "✓" : outOfStock ? "—" : "+ Adicionar"}
-      </button>
+      <div className="flex shrink-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={handleAddClick}
+          disabled={outOfStock}
+          className="rounded-full bg-gray-900 px-3.5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {added ? "✓" : outOfStock ? "—" : "Adicionar"}
+        </button>
+        <button
+          type="button"
+          onClick={handleWhatsAppClick}
+          disabled={outOfStock}
+          aria-label="Enviar pelo WhatsApp"
+          className="flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full bg-[#16a34a] text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <WhatsAppIcon className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

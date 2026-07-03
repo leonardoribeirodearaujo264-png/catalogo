@@ -25,11 +25,11 @@ type FormState = {
   variations: ItemVariation[];
 };
 
-function toFormState(item?: CatalogItem, defaultCategoryId?: string): FormState {
+function toFormState(item?: CatalogItem): FormState {
   return {
     name: item?.name ?? "",
     kind: item?.kind ?? "produto",
-    categoryId: item?.categoryId ?? defaultCategoryId ?? "",
+    categoryId: item?.categoryId ?? "",
     description: item?.description ?? "",
     price: item ? String(item.price) : "",
     priceCompare: item?.priceCompare ? String(item.priceCompare) : "",
@@ -46,7 +46,7 @@ function toFormState(item?: CatalogItem, defaultCategoryId?: string): FormState 
 export function ItemForm({ item }: { item?: CatalogItem }) {
   const router = useRouter();
   const { catalog, categories, addItem, updateItem, deleteItem } = useAdminCatalog();
-  const [form, setForm] = useState<FormState>(() => toFormState(item, categories[0]?.id));
+  const [form, setForm] = useState<FormState>(() => toFormState(item));
   const [saving, setSaving] = useState(false);
   const isEditing = !!item;
 
@@ -132,14 +132,13 @@ export function ItemForm({ item }: { item?: CatalogItem }) {
           </select>
         </Field>
 
-        <Field label="Categoria">
+        <Field label="Categoria" hint="Opcional.">
           <select
-            required
             value={form.categoryId}
             onChange={(e) => patch({ categoryId: e.target.value })}
             className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-gray-900"
           >
-            <option value="" disabled>Selecione...</option>
+            <option value="">Sem categoria</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
             ))}

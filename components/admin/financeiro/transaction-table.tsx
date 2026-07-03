@@ -16,7 +16,13 @@ function formatDate(value?: string) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
-export function TransactionTable({ transactions }: { transactions: FinancialTransaction[] }) {
+export function TransactionTable({
+  transactions,
+  onDelete,
+}: {
+  transactions: FinancialTransaction[];
+  onDelete?: (id: string) => void;
+}) {
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-gray-300 py-16 text-center">
@@ -43,7 +49,10 @@ export function TransactionTable({ transactions }: { transactions: FinancialTran
         <tbody>
           {transactions.map((tx) => (
             <tr key={tx.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60">
-              <td className="px-4 py-3 font-semibold text-gray-900">{tx.description}</td>
+              <td className="px-4 py-3 font-semibold text-gray-900">
+                {tx.description}
+                {tx.orderId && <span className="ml-2 text-[10px] font-normal text-gray-400">via pedido</span>}
+              </td>
               <td className="px-4 py-3 text-gray-600">{tx.customerName || "—"}</td>
               <td className="px-4 py-3 text-gray-600">{formatDate(tx.dueDate)}</td>
               <td className="px-4 py-3">
@@ -53,9 +62,21 @@ export function TransactionTable({ transactions }: { transactions: FinancialTran
                 {tx.type === "receita" ? "+" : "−"} {formatPrice(tx.amount)}
               </td>
               <td className="px-4 py-3 text-right">
-                <Link href={`/admin/financeiro/${tx.id}`} className="text-sm font-semibold text-brand-accent hover:underline">
-                  Editar
-                </Link>
+                <div className="flex items-center justify-end gap-3">
+                  <Link href={`/admin/financeiro/${tx.id}`} className="text-sm font-semibold text-brand-accent hover:underline">
+                    Editar
+                  </Link>
+                  {onDelete && (
+                    <button
+                      onClick={() => {
+                        if (confirm("Excluir este lançamento?")) onDelete(tx.id);
+                      }}
+                      className="text-sm font-semibold text-red-500 hover:underline"
+                    >
+                      Excluir
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

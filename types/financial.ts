@@ -10,6 +10,7 @@ export interface FinancialTransaction {
   description: string;
   customerName?: string;
   productId?: string;
+  orderId?: string;
   amount: number;
   dueDate?: string;
   paidDate?: string;

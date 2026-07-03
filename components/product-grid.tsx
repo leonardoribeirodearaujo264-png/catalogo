@@ -10,13 +10,15 @@ export function ProductGrid({
   layout = "grade",
   addedId,
   onOpen,
-  onQuickAdd,
+  onAddToCart,
+  onWhatsAppBuy,
 }: {
   items: CatalogItem[];
   layout?: CatalogLayout;
   addedId?: string | null;
   onOpen: (item: CatalogItem) => void;
-  onQuickAdd: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem) => void;
+  onWhatsAppBuy: (item: CatalogItem) => void;
 }) {
   const { getCategory } = useCatalogView();
 
@@ -40,7 +42,8 @@ export function ProductGrid({
             category={getCategory(item.categoryId)}
             added={addedId === item.id}
             onOpen={onOpen}
-            onQuickAdd={onQuickAdd}
+            onAddToCart={onAddToCart}
+            onWhatsAppBuy={onWhatsAppBuy}
           />
         ))}
       </div>
@@ -56,7 +59,8 @@ export function ProductGrid({
           category={getCategory(item.categoryId)}
           added={addedId === item.id}
           onOpen={onOpen}
-          onQuickAdd={onQuickAdd}
+          onAddToCart={onAddToCart}
+          onWhatsAppBuy={onWhatsAppBuy}
         />
       ))}
     </div>

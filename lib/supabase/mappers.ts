@@ -1,6 +1,6 @@
-import type { CatalogItem, Category, Catalog } from "@/types/catalog";
+import type { CatalogItem, Category, Catalog, Order } from "@/types/catalog";
 import type { FinancialTransaction } from "@/types/financial";
-import type { CatalogRow, CategoryRow, FinancialTransactionRow, ProductRow } from "./types";
+import type { CatalogRow, CategoryRow, FinancialTransactionRow, OrderRow, ProductRow } from "./types";
 
 export function rowToCatalog(row: CatalogRow): Catalog {
   return {
@@ -118,6 +118,7 @@ export function rowToTransaction(row: FinancialTransactionRow): FinancialTransac
     id: row.id,
     userId: row.user_id,
     catalogId: row.catalog_id,
+    orderId: row.order_id ?? undefined,
     type: row.type,
     description: row.description,
     customerName: row.customer_name ?? undefined,
@@ -137,6 +138,7 @@ export function transactionToRow(tx: Partial<FinancialTransaction>): Partial<Fin
   const row: Partial<FinancialTransactionRow> = {};
   if (tx.userId !== undefined) row.user_id = tx.userId;
   if (tx.catalogId !== undefined) row.catalog_id = tx.catalogId;
+  if (tx.orderId !== undefined) row.order_id = tx.orderId || null;
   if (tx.type !== undefined) row.type = tx.type;
   if (tx.description !== undefined) row.description = tx.description;
   if (tx.customerName !== undefined) row.customer_name = tx.customerName || null;
@@ -147,5 +149,36 @@ export function transactionToRow(tx: Partial<FinancialTransaction>): Partial<Fin
   if (tx.status !== undefined) row.status = tx.status;
   if (tx.paymentMethod !== undefined) row.payment_method = tx.paymentMethod || null;
   if (tx.notes !== undefined) row.notes = tx.notes || null;
+  return row;
+}
+
+export function rowToOrder(row: OrderRow): Order {
+  return {
+    id: row.id,
+    catalogId: row.catalog_id,
+    customerName: row.customer_name ?? undefined,
+    customerPhone: row.customer_phone ?? undefined,
+    items: row.items ?? [],
+    totalAmount: Number(row.total_amount),
+    status: row.status,
+    origin: row.origin,
+    message: row.message ?? undefined,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function orderToRow(order: Partial<Order>): Partial<OrderRow> {
+  const row: Partial<OrderRow> = {};
+  if (order.catalogId !== undefined) row.catalog_id = order.catalogId;
+  if (order.customerName !== undefined) row.customer_name = order.customerName || null;
+  if (order.customerPhone !== undefined) row.customer_phone = order.customerPhone || null;
+  if (order.items !== undefined) row.items = order.items;
+  if (order.totalAmount !== undefined) row.total_amount = order.totalAmount;
+  if (order.status !== undefined) row.status = order.status;
+  if (order.origin !== undefined) row.origin = order.origin;
+  if (order.message !== undefined) row.message = order.message || null;
+  if (order.notes !== undefined) row.notes = order.notes || null;
   return row;
 }

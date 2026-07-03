@@ -102,7 +102,10 @@ create index if not exists idx_cd_categories_catalog on cd_categories(catalog_id
 create index if not exists idx_cd_products_catalog   on cd_products(catalog_id);
 create index if not exists idx_cd_products_category  on cd_products(category_id);
 
--- ── Pedidos/Leads (interesse enviado pelo visitante) ─────────
+-- ── Pedidos (carrinho enviado pelo visitante via WhatsApp) ───
+-- "cd_leads" é a tabela de pedidos: todo pedido enviado pelo
+-- WhatsApp fica salvo aqui antes de abrir a conversa, com status
+-- para o admin acompanhar (pendente/vendido/perdido) em /admin/pedidos.
 create table if not exists cd_leads (
   id             uuid primary key default gen_random_uuid(),
   catalog_id     uuid not null references cd_catalogs(id) on delete cascade,
@@ -113,7 +116,29 @@ create table if not exists cd_leads (
   created_at     timestamptz not null default now()
 );
 
+-- Migração: colunas adicionadas depois da primeira versão da tabela.
+alter table cd_leads add column if not exists user_id      uuid references auth.users(id) on delete cascade;
+alter table cd_leads add column if not exists total_amount numeric(10,2) not null default 0;
+alter table cd_leads add column if not exists status       text not null default 'pendente' check (status in ('pendente', 'vendido', 'perdido'));
+alter table cd_leads add column if not exists origin       text not null default 'whatsapp';
+alter table cd_leads add column if not exists notes        text;
+alter table cd_leads add column if not exists updated_at   timestamptz not null default now();
+
 create index if not exists idx_cd_leads_catalog on cd_leads(catalog_id);
+create index if not exists idx_cd_leads_status  on cd_leads(status);
+
+-- Preenche user_id automaticamente a partir do catalog_id (o cliente
+-- que faz o pedido é anônimo e não tem como informar isso na mão).
+create or replace function cd_set_lead_user_id() returns trigger as $$
+begin
+  new.user_id := (select user_id from cd_catalogs where id = new.catalog_id);
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists trg_cd_leads_set_user_id on cd_leads;
+create trigger trg_cd_leads_set_user_id before insert on cd_leads
+  for each row execute function cd_set_lead_user_id();
 
 -- ============================================================
 --  Row Level Security
@@ -190,12 +215,18 @@ create policy "owner delete products" on cd_products for delete using (
 
 drop policy if exists "public insert leads" on cd_leads;
 drop policy if exists "owner read leads"    on cd_leads;
+drop policy if exists "owner update leads"  on cd_leads;
 drop policy if exists "owner delete leads"  on cd_leads;
 
 create policy "public insert leads" on cd_leads for insert with check (
   exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.is_published = true)
 );
 create policy "owner read leads" on cd_leads for select using (
+  exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
+);
+create policy "owner update leads" on cd_leads for update using (
+  exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
+) with check (
   exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
 );
 create policy "owner delete leads" on cd_leads for delete using (
@@ -226,9 +257,14 @@ create table if not exists cd_financial_transactions (
   updated_at     timestamptz not null default now()
 );
 
+-- Migração: vincula um lançamento financeiro ao pedido que o originou
+-- (permite "transformar pedido em lançamento" e mostrar de onde veio).
+alter table cd_financial_transactions add column if not exists order_id uuid references cd_leads(id) on delete set null;
+
 create index if not exists idx_cd_fin_user     on cd_financial_transactions(user_id);
 create index if not exists idx_cd_fin_catalog  on cd_financial_transactions(catalog_id);
 create index if not exists idx_cd_fin_due_date on cd_financial_transactions(due_date);
+create index if not exists idx_cd_fin_order    on cd_financial_transactions(order_id);
 
 alter table cd_financial_transactions enable row level security;
 

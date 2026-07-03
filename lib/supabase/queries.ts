@@ -4,14 +4,16 @@ import {
   catalogToRow,
   categoryToRow,
   itemToRow,
+  orderToRow,
   rowToCatalog,
   rowToCategory,
   rowToItem,
+  rowToOrder,
   rowToTransaction,
   transactionToRow,
 } from "./mappers";
-import type { CategoryRow, LeadRow, CatalogRow, FinancialTransactionRow, ProductRow } from "./types";
-import type { CatalogItem, Category, Catalog, InterestListEntry } from "@/types/catalog";
+import type { CategoryRow, OrderRow, CatalogRow, FinancialTransactionRow, ProductRow } from "./types";
+import type { CatalogItem, Category, Catalog, InterestListEntry, Order } from "@/types/catalog";
 import type { FinancialTransaction } from "@/types/financial";
 
 function requireBrowserClient(): SupabaseClient {
@@ -58,16 +60,31 @@ export async function fetchPublicProducts(client: SupabaseClient, catalogId: str
   return ((data ?? []) as ProductRow[]).map(rowToItem);
 }
 
-export async function insertLead(
+export async function insertOrder(
   client: SupabaseClient,
-  lead: { catalogId: string; items: InterestListEntry[]; message?: string },
-): Promise<void> {
-  const { error } = await client.from("cd_leads").insert({
-    catalog_id: lead.catalogId,
-    items: lead.items,
-    message: lead.message ?? null,
-  });
+  order: {
+    catalogId: string;
+    items: InterestListEntry[];
+    totalAmount: number;
+    message?: string;
+    customerName?: string;
+    customerPhone?: string;
+  },
+): Promise<Order> {
+  const { data, error } = await client
+    .from("cd_leads")
+    .insert({
+      catalog_id: order.catalogId,
+      items: order.items,
+      total_amount: order.totalAmount,
+      message: order.message ?? null,
+      customer_name: order.customerName ?? null,
+      customer_phone: order.customerPhone ?? null,
+    })
+    .select("*")
+    .single();
   if (error) throw error;
+  return rowToOrder(data as OrderRow);
 }
 
 // ── Admin (autenticado, dono do catálogo) ────────────────────────
@@ -158,26 +175,25 @@ export async function deleteItemRow(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export interface LeadSummary {
-  id: string;
-  items: InterestListEntry[];
-  message?: string;
-  createdAt: string;
-}
-
-export async function fetchOwnerLeads(catalogId: string): Promise<LeadSummary[]> {
+export async function fetchOwnerOrders(catalogId: string): Promise<Order[]> {
   const { data, error } = await requireBrowserClient()
     .from("cd_leads")
     .select("*")
     .eq("catalog_id", catalogId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as LeadRow[]).map((row) => ({
-    id: row.id,
-    items: row.items ?? [],
-    message: row.message ?? undefined,
-    createdAt: row.created_at,
-  }));
+  return ((data ?? []) as OrderRow[]).map(rowToOrder);
+}
+
+export async function updateOrderRow(id: string, patch: Partial<Order>): Promise<void> {
+  const row = { ...orderToRow(patch), updated_at: new Date().toISOString() };
+  const { error } = await requireBrowserClient().from("cd_leads").update(row).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteOrderRow(id: string): Promise<void> {
+  const { error } = await requireBrowserClient().from("cd_leads").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ── Financeiro (100% privado, dono do catálogo) ──────────────────

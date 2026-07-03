@@ -61,7 +61,7 @@ export default function AdminSettingsPage() {
             <span className="text-base">🏷️</span> Identidade da marca
           </h2>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Nome do negócio">
+            <Field label="Nome público do catálogo" hint="Exatamente como aparece no topo do catálogo.">
               <Input value={draft.businessName} onChange={(e) => patch({ businessName: e.target.value })} />
             </Field>
             <Field label="Nicho / segmento" hint="Aparece como selo no banner principal.">

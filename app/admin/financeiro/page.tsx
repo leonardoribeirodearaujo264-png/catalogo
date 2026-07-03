@@ -10,7 +10,7 @@ import { currentMonthTotals, groupByMonth } from "@/lib/financial-utils";
 import { formatPrice } from "@/lib/utils";
 
 export default function FinancialDashboardPage() {
-  const { transactions, loading, error } = useFinancial();
+  const { transactions, loading, error, deleteTransaction } = useFinancial();
 
   if (loading) return <p className="text-sm text-gray-400">Carregando...</p>;
   if (error) return <p className="text-sm font-semibold text-red-600">{error}</p>;
@@ -67,7 +67,7 @@ export default function FinancialDashboardPage() {
             Ver tudo
           </Link>
         </div>
-        <TransactionTable transactions={recent} />
+        <TransactionTable transactions={recent} onDelete={deleteTransaction} />
       </div>
     </div>
   );

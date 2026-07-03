@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
+import { WhatsAppIcon } from "@/components/icons";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem, Category } from "@/types/catalog";
 
@@ -11,13 +12,15 @@ export function ProductCard({
   category,
   added,
   onOpen,
-  onQuickAdd,
+  onAddToCart,
+  onWhatsAppBuy,
 }: {
   item: CatalogItem;
   category?: Category;
   added?: boolean;
   onOpen: (item: CatalogItem) => void;
-  onQuickAdd: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem) => void;
+  onWhatsAppBuy: (item: CatalogItem) => void;
 }) {
   const hasDiscount = !!item.priceCompare && item.priceCompare > item.price;
   const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceCompare!) * 100) : 0;
@@ -31,7 +34,17 @@ export function ProductCard({
       onOpen(item);
       return;
     }
-    onQuickAdd(item);
+    onAddToCart(item);
+  }
+
+  function handleWhatsAppClick(e: MouseEvent) {
+    e.stopPropagation();
+    if (outOfStock) return;
+    if (needsVariation) {
+      onOpen(item);
+      return;
+    }
+    onWhatsAppBuy(item);
   }
 
   return (
@@ -60,20 +73,30 @@ export function ProductCard({
       <div className="flex flex-1 flex-col gap-1 p-3.5 sm:p-4">
         <h3 className="line-clamp-2 text-sm font-bold text-gray-900">{item.name}</h3>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <div className="min-w-0">
-            {hasDiscount && (
-              <div className="text-[11px] font-semibold text-gray-400 line-through">{formatPrice(item.priceCompare!)}</div>
-            )}
-            <div className="truncate text-base font-extrabold text-gray-900">{formatPrice(item.price)}</div>
-          </div>
+        <div className="pt-1">
+          {hasDiscount && (
+            <div className="text-[11px] font-semibold text-gray-400 line-through">{formatPrice(item.priceCompare!)}</div>
+          )}
+          <div className="truncate text-base font-extrabold text-gray-900">{formatPrice(item.price)}</div>
+        </div>
+
+        <div className="mt-auto flex items-center gap-1.5 pt-3">
           <button
             type="button"
             onClick={handleAddClick}
             disabled={outOfStock}
-            className="shrink-0 rounded-full bg-gray-900 px-3.5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
+            className="flex-1 rounded-full bg-gray-900 px-2.5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {added ? "✓" : outOfStock ? "—" : "+ Adicionar"}
+            {added ? "✓ Adicionado" : outOfStock ? "Esgotado" : "Adicionar"}
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsAppClick}
+            disabled={outOfStock}
+            aria-label="Enviar pelo WhatsApp"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#16a34a] text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <WhatsAppIcon className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

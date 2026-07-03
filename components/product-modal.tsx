@@ -3,20 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCatalogView } from "@/lib/catalog-view-context";
 import { useInterestList } from "@/lib/interest-context";
+import { getBrowserClient } from "@/lib/supabase/browser-client";
+import { insertOrder } from "@/lib/supabase/queries";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CloseIcon } from "@/components/icons";
+import { CloseIcon, WhatsAppIcon } from "@/components/icons";
+import { buildItemInterestMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem } from "@/types/catalog";
 
 export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: () => void }) {
   const { catalog, getCategory } = useCatalogView();
-  const { addEntry } = useInterestList();
+  const { addEntry, openCart } = useInterestList();
   const category = getCategory(item.categoryId);
 
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
-  const [added, setAdded] = useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -34,10 +37,10 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
   const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceCompare!) * 100) : 0;
   const outOfStock = item.stock !== null && item.stock !== undefined && item.stock <= 0;
   const needsVariation = (item.variations?.length ?? 0) > 0;
-  const canAdd = !outOfStock && (!needsVariation || !!selectedVariation);
+  const canAct = !outOfStock && (!needsVariation || !!selectedVariation);
   const finalPrice = selectedVariation?.price ?? item.price;
 
-  function handleAdd() {
+  function handleAddToCart() {
     addEntry({
       catalogId: catalog.id,
       itemId: item.id,
@@ -45,8 +48,46 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
       price: finalPrice,
       variationName: selectedVariation?.name,
     });
-    setAdded(true);
-    setTimeout(onClose, 600);
+    onClose();
+    openCart();
+  }
+
+  async function handleWhatsAppBuy() {
+    setSendingWhatsApp(true);
+    const message = buildItemInterestMessage({
+      greeting: catalog.whatsappDefaultMessage,
+      itemName: item.name,
+      price: finalPrice,
+      variationName: selectedVariation?.name,
+    });
+    const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, message);
+
+    try {
+      const client = getBrowserClient();
+      if (client) {
+        await insertOrder(client, {
+          catalogId: catalog.id,
+          items: [
+            {
+              catalogId: catalog.id,
+              itemId: item.id,
+              name: item.name,
+              price: finalPrice,
+              variationName: selectedVariation?.name,
+              quantity: 1,
+            },
+          ],
+          totalAmount: finalPrice,
+          message,
+        });
+      }
+    } catch (err) {
+      console.error("Não foi possível registrar o pedido:", err);
+    }
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    setSendingWhatsApp(false);
+    onClose();
   }
 
   return (
@@ -110,9 +151,15 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
             </div>
           )}
 
-          <Button variant="brand" size="lg" className="mt-6 w-full" disabled={!canAdd} onClick={handleAdd}>
-            {added ? "Adicionado ✓" : outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
-          </Button>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button variant="brand" size="lg" className="w-full" disabled={!canAct} onClick={handleAddToCart}>
+              {outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
+            </Button>
+            <Button variant="whatsapp" size="lg" className="w-full" disabled={!canAct || sendingWhatsApp} onClick={handleWhatsAppBuy}>
+              <WhatsAppIcon className="h-4 w-4" />
+              {sendingWhatsApp ? "Enviando..." : "Enviar pelo WhatsApp"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

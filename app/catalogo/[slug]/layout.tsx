@@ -6,6 +6,7 @@ import { CatalogViewProvider } from "@/lib/catalog-view-context";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppFloatButton } from "@/components/whatsapp-float-button";
+import { CartDrawer } from "@/components/cart-drawer";
 
 export default async function CatalogLayout({
   children,
@@ -38,6 +39,7 @@ export default async function CatalogLayout({
       <main className="flex-1">{children}</main>
       <SiteFooter />
       <WhatsAppFloatButton />
+      <CartDrawer />
     </CatalogViewProvider>
   );
 }

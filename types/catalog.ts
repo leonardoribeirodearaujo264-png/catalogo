@@ -92,12 +92,20 @@ export interface InterestListEntry {
   quantity: number;
 }
 
-export interface Lead {
+export type OrderStatus = "pendente" | "vendido" | "perdido";
+
+/** Pedido enviado pelo visitante via WhatsApp (carrinho ou item avulso). */
+export interface Order {
   id: string;
   catalogId: string;
   customerName?: string;
   customerPhone?: string;
   items: InterestListEntry[];
+  totalAmount: number;
+  status: OrderStatus;
+  origin: string;
   message?: string;
+  notes?: string;
   createdAt: string;
+  updatedAt: string;
 }

@@ -7,7 +7,7 @@ import { useCatalogView } from "@/lib/catalog-view-context";
 
 export function SiteHeader() {
   const { catalog } = useCatalogView();
-  const { totalItemsForCatalog } = useInterestList();
+  const { totalItemsForCatalog, openCart } = useInterestList();
   const totalItems = totalItemsForCatalog(catalog.id);
   const base = `/catalogo/${catalog.slug}`;
 
@@ -26,8 +26,8 @@ export function SiteHeader() {
           <span className="truncate text-lg tracking-tight">{catalog.businessName}</span>
         </Link>
 
-        <Link
-          href={`${base}/interesse`}
+        <button
+          onClick={openCart}
           className="relative flex h-11 w-11 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100"
           aria-label="Carrinho"
         >
@@ -37,7 +37,7 @@ export function SiteHeader() {
               {totalItems}
             </span>
           )}
-        </Link>
+        </button>
       </div>
     </header>
   );

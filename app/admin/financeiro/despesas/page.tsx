@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
 export default function ExpensesPage() {
-  const { transactions, loading } = useFinancial();
+  const { transactions, loading, deleteTransaction } = useFinancial();
   const expenses = transactions.filter((t) => t.type === "despesa");
   const total = expenses.reduce((sum, t) => sum + t.amount, 0);
 
@@ -26,7 +26,7 @@ export default function ExpensesPage() {
       </div>
 
       <div className="mt-6">
-        <TransactionTable transactions={expenses} />
+        <TransactionTable transactions={expenses} onDelete={deleteTransaction} />
       </div>
     </div>
   );
