@@ -9,10 +9,14 @@ export function ImageUpload({
   value,
   onChange,
   catalogId,
+  folder = "products",
+  aspect = "square",
 }: {
   value: string;
   onChange: (url: string) => void;
   catalogId: string;
+  folder?: "products" | "branding";
+  aspect?: "square" | "wide";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -28,7 +32,7 @@ export function ImageUpload({
 
     setUploading(true);
     try {
-      const url = await uploadCatalogImage(file, catalogId);
+      const url = await uploadCatalogImage(file, catalogId, folder);
       onChange(url);
     } catch (err) {
       console.error(err);
@@ -54,13 +58,14 @@ export function ImageUpload({
 
       <div
         className={cn(
-          "relative flex aspect-square w-full max-w-[220px] items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors",
+          "relative flex w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors",
+          aspect === "square" ? "aspect-square max-w-[220px]" : "aspect-[21/9] max-w-full",
           value ? "border-transparent" : "border-gray-300 hover:border-gray-400",
         )}
       >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={value} alt="Imagem do item" className="h-full w-full object-cover" />
+          <img src={value} alt="Imagem enviada" className="h-full w-full object-cover" />
         ) : (
           <button
             type="button"

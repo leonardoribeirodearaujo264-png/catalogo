@@ -1,5 +1,6 @@
 import type { CatalogItem, Category, Catalog } from "@/types/catalog";
-import type { CatalogRow, CategoryRow, ProductRow } from "./types";
+import type { FinancialTransaction } from "@/types/financial";
+import type { CatalogRow, CategoryRow, FinancialTransactionRow, ProductRow } from "./types";
 
 export function rowToCatalog(row: CatalogRow): Catalog {
   return {
@@ -20,6 +21,7 @@ export function rowToCatalog(row: CatalogRow): Catalog {
     address: row.address ?? {},
     social: row.social ?? {},
     isPublished: row.is_published,
+    layout: row.layout ?? "grade",
   };
 }
 
@@ -40,6 +42,7 @@ export function catalogToRow(catalog: Partial<Catalog>): Partial<CatalogRow> {
   if (catalog.address !== undefined) row.address = catalog.address;
   if (catalog.social !== undefined) row.social = catalog.social;
   if (catalog.isPublished !== undefined) row.is_published = catalog.isPublished;
+  if (catalog.layout !== undefined) row.layout = catalog.layout;
   return row;
 }
 
@@ -107,5 +110,42 @@ export function itemToRow(item: Partial<CatalogItem>): Partial<ProductRow> {
   if (item.active !== undefined) row.active = item.active;
   if (item.featured !== undefined) row.featured = item.featured;
   if (item.promotional !== undefined) row.promotional = item.promotional;
+  return row;
+}
+
+export function rowToTransaction(row: FinancialTransactionRow): FinancialTransaction {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    catalogId: row.catalog_id,
+    type: row.type,
+    description: row.description,
+    customerName: row.customer_name ?? undefined,
+    productId: row.product_id ?? undefined,
+    amount: Number(row.amount),
+    dueDate: row.due_date ?? undefined,
+    paidDate: row.paid_date ?? undefined,
+    status: row.status,
+    paymentMethod: row.payment_method ?? undefined,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function transactionToRow(tx: Partial<FinancialTransaction>): Partial<FinancialTransactionRow> {
+  const row: Partial<FinancialTransactionRow> = {};
+  if (tx.userId !== undefined) row.user_id = tx.userId;
+  if (tx.catalogId !== undefined) row.catalog_id = tx.catalogId;
+  if (tx.type !== undefined) row.type = tx.type;
+  if (tx.description !== undefined) row.description = tx.description;
+  if (tx.customerName !== undefined) row.customer_name = tx.customerName || null;
+  if (tx.productId !== undefined) row.product_id = tx.productId || null;
+  if (tx.amount !== undefined) row.amount = tx.amount;
+  if (tx.dueDate !== undefined) row.due_date = tx.dueDate || null;
+  if (tx.paidDate !== undefined) row.paid_date = tx.paidDate || null;
+  if (tx.status !== undefined) row.status = tx.status;
+  if (tx.paymentMethod !== undefined) row.payment_method = tx.paymentMethod || null;
+  if (tx.notes !== undefined) row.notes = tx.notes || null;
   return row;
 }

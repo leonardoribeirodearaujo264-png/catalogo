@@ -184,7 +184,7 @@ export function ItemForm({ item }: { item?: CatalogItem }) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-gray-900">Variações (tamanhos, sabores, pacotes...)</h3>
           <Button type="button" size="sm" variant="secondary" onClick={addVariation}>+ Adicionar</Button>
@@ -223,7 +223,7 @@ export function ItemForm({ item }: { item?: CatalogItem }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="mb-3 text-sm font-bold text-gray-900">Visibilidade</h3>
         <div className="flex flex-wrap gap-5">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">

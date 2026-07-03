@@ -1,8 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getBrowserClient } from "./browser-client";
-import { catalogToRow, categoryToRow, itemToRow, rowToCatalog, rowToCategory, rowToItem } from "./mappers";
-import type { CategoryRow, LeadRow, CatalogRow, ProductRow } from "./types";
+import {
+  catalogToRow,
+  categoryToRow,
+  itemToRow,
+  rowToCatalog,
+  rowToCategory,
+  rowToItem,
+  rowToTransaction,
+  transactionToRow,
+} from "./mappers";
+import type { CategoryRow, LeadRow, CatalogRow, FinancialTransactionRow, ProductRow } from "./types";
 import type { CatalogItem, Category, Catalog, InterestListEntry } from "@/types/catalog";
+import type { FinancialTransaction } from "@/types/financial";
 
 function requireBrowserClient(): SupabaseClient {
   const client = getBrowserClient();
@@ -168,4 +178,37 @@ export async function fetchOwnerLeads(catalogId: string): Promise<LeadSummary[]>
     message: row.message ?? undefined,
     createdAt: row.created_at,
   }));
+}
+
+// ── Financeiro (100% privado, dono do catálogo) ──────────────────
+
+export async function fetchTransactions(catalogId: string): Promise<FinancialTransaction[]> {
+  const { data, error } = await requireBrowserClient()
+    .from("cd_financial_transactions")
+    .select("*")
+    .eq("catalog_id", catalogId)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as FinancialTransactionRow[]).map(rowToTransaction);
+}
+
+export async function insertTransaction(
+  tx: Omit<FinancialTransaction, "id" | "createdAt" | "updatedAt">,
+): Promise<FinancialTransaction> {
+  const row = transactionToRow(tx);
+  const { data, error } = await requireBrowserClient().from("cd_financial_transactions").insert(row).select("*").single();
+  if (error) throw error;
+  return rowToTransaction(data as FinancialTransactionRow);
+}
+
+export async function updateTransactionRow(id: string, patch: Partial<FinancialTransaction>): Promise<void> {
+  const row = { ...transactionToRow(patch), updated_at: new Date().toISOString() };
+  const { error } = await requireBrowserClient().from("cd_financial_transactions").update(row).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteTransactionRow(id: string): Promise<void> {
+  const { error } = await requireBrowserClient().from("cd_financial_transactions").delete().eq("id", id);
+  if (error) throw error;
 }

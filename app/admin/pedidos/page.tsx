@@ -52,7 +52,7 @@ export default function AdminOrdersPage() {
           {leads.map((lead) => {
             const total = lead.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
             return (
-              <div key={lead.id} className="rounded-xl border border-gray-200 bg-white p-4">
+              <div key={lead.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between text-xs text-gray-400">
                   <span>{new Date(lead.createdAt).toLocaleString("pt-BR")}</span>
                   <span className="font-bold text-gray-900">{formatPrice(total)}</span>

@@ -2,11 +2,17 @@
 --  Catálogo Digital — SQL único (schema + seed)
 --
 --  As tabelas usam o prefixo "cd_" (cd_catalogs, cd_categories,
---  cd_products, cd_leads) de propósito: este projeto Supabase já
---  tem outras tabelas de outros testes (ex.: "products",
---  "categories" genéricos), então nomes sem prefixo davam erro
---  de coluna inexistente (a tabela antiga era reaproveitada pelo
---  "create table if not exists" e não tinha as colunas certas).
+--  cd_products, cd_leads, cd_financial_transactions) de propósito:
+--  este projeto Supabase já tem outras tabelas de outros testes
+--  (ex.: "products", "categories" genéricos), então nomes sem
+--  prefixo davam erro de coluna inexistente (a tabela antiga era
+--  reaproveitada pelo "create table if not exists" e não tinha as
+--  colunas certas).
+--
+--  Este arquivo é seguro de rodar de novo a qualquer momento —
+--  além de "create table if not exists", usa "add column if not
+--  exists" para novas colunas em tabelas já existentes (ex.: o
+--  campo de layout do catálogo).
 --
 --  Como usar:
 --    1) Cole este arquivo inteiro no SQL Editor do Supabase e
@@ -50,6 +56,11 @@ create table if not exists cd_catalogs (
   is_published             boolean not null default true,
   created_at               timestamptz not null default now()
 );
+
+-- Migração: coluna de layout do catálogo público (adicionada depois
+-- da primeira versão da tabela — "add column if not exists" garante
+-- que rodar de novo em bancos já criados não quebra nada).
+alter table cd_catalogs add column if not exists layout text not null default 'grade' check (layout in ('lista', 'grade'));
 
 -- ── Categorias ────────────────────────────────────────────────
 create table if not exists cd_categories (
@@ -190,6 +201,41 @@ create policy "owner read leads" on cd_leads for select using (
 create policy "owner delete leads" on cd_leads for delete using (
   exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
 );
+
+-- ============================================================
+--  Financeiro (lançamentos de receitas/despesas do dono do
+--  catálogo). 100% privado — sem leitura pública em nenhuma
+--  hipótese.
+-- ============================================================
+
+create table if not exists cd_financial_transactions (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  catalog_id     uuid not null references cd_catalogs(id) on delete cascade,
+  type           text not null check (type in ('receita', 'despesa')),
+  description    text not null,
+  customer_name  text,
+  product_id     uuid references cd_products(id) on delete set null,
+  amount         numeric(10,2) not null default 0,
+  due_date       date,
+  paid_date      date,
+  status         text not null default 'pendente' check (status in ('pendente', 'pago', 'atrasado', 'cancelado')),
+  payment_method text check (payment_method in ('pix', 'dinheiro', 'cartao', 'boleto', 'transferencia', 'outro')),
+  notes          text,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists idx_cd_fin_user     on cd_financial_transactions(user_id);
+create index if not exists idx_cd_fin_catalog  on cd_financial_transactions(catalog_id);
+create index if not exists idx_cd_fin_due_date on cd_financial_transactions(due_date);
+
+alter table cd_financial_transactions enable row level security;
+
+drop policy if exists "owner all financial_transactions" on cd_financial_transactions;
+create policy "owner all financial_transactions" on cd_financial_transactions for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- ============================================================
 --  Storage — bucket para upload de imagens de produtos/serviços

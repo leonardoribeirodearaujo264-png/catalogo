@@ -83,4 +83,12 @@ A autenticação e todos os dados do catálogo dependem do Supabase — não há
 
 Públicas: `/`, `/login`, `/register`, `/catalogo/[slug]`, `/catalogo/[slug]/produto/[id]`, `/catalogo/[slug]/interesse`.
 
-Privadas (exigem login): `/admin`, `/admin/produtos`, `/admin/categorias`, `/admin/configuracoes`, `/admin/link-publico`, `/admin/pedidos`.
+Privadas (exigem login): `/admin`, `/admin/produtos`, `/admin/categorias`, `/admin/configuracoes`, `/admin/link-publico`, `/admin/pedidos`, `/admin/financeiro`, `/admin/financeiro/novo`, `/admin/financeiro/receitas`, `/admin/financeiro/despesas`, `/admin/financeiro/relatorios`.
+
+## Financeiro
+
+Cada usuário tem seu próprio módulo financeiro (`cd_financial_transactions`), 100% privado — nem o catálogo público nem outros usuários enxergam esses dados. Dashboard com receitas/despesas do mês, saldo, pendências, atrasados, últimos lançamentos e um gráfico simples dos últimos 6 meses.
+
+## Layout do catálogo
+
+Em `/admin/configuracoes`, o dono do catálogo escolhe entre dois layouts para a vitrine pública: **blocos** (cards quadrados, padrão) ou **lista** (linhas horizontais, mais compacta). A escolha é salva no catálogo (`cd_catalogs.layout`) e aplicada automaticamente em `/catalogo/[slug]`.

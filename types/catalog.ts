@@ -3,6 +3,7 @@
 // categorias, produtos/serviços e leads.
 
 export type ItemKind = "produto" | "servico";
+export type CatalogLayout = "lista" | "grade";
 
 export interface ItemVariation {
   id: string;
@@ -79,6 +80,7 @@ export interface Catalog {
   address: BusinessAddress;
   social: SocialLinks;
   isPublished: boolean;
+  layout: CatalogLayout;
 }
 
 export interface InterestListEntry {

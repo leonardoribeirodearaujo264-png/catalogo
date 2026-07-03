@@ -2,7 +2,8 @@
 // supabase/setup.sql. Os componentes da aplicação usam os tipos de
 // /types/catalog.ts (camelCase) — a conversão fica em ./mappers.ts.
 
-import type { BusinessAddress, InterestListEntry, SocialLinks } from "@/types/catalog";
+import type { BusinessAddress, CatalogLayout, InterestListEntry, SocialLinks } from "@/types/catalog";
+import type { PaymentMethod, TransactionStatus, TransactionType } from "@/types/financial";
 
 export interface CatalogRow {
   id: string;
@@ -22,6 +23,7 @@ export interface CatalogRow {
   address: BusinessAddress;
   social: SocialLinks;
   is_published: boolean;
+  layout: CatalogLayout;
   created_at: string;
 }
 
@@ -72,4 +74,22 @@ export interface LeadRow {
   items: InterestListEntry[];
   message: string | null;
   created_at: string;
+}
+
+export interface FinancialTransactionRow {
+  id: string;
+  user_id: string;
+  catalog_id: string;
+  type: TransactionType;
+  description: string;
+  customer_name: string | null;
+  product_id: string | null;
+  amount: number;
+  due_date: string | null;
+  paid_date: string | null;
+  status: TransactionStatus;
+  payment_method: PaymentMethod | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }

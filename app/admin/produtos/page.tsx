@@ -23,7 +23,7 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-gray-200 bg-gray-50 text-xs font-bold uppercase tracking-wide text-gray-500">
             <tr>

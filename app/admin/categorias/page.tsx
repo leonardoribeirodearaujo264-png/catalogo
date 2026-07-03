@@ -64,7 +64,7 @@ export default function AdminCategoriesPage() {
       <h1 className="text-2xl font-extrabold text-gray-900">Categorias</h1>
       <p className="mt-1 text-sm text-gray-500">Organize seu catálogo em categorias — funciona para qualquer nicho.</p>
 
-      <form onSubmit={handleCreate} className="mt-6 flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-white p-5">
+      <form onSubmit={handleCreate} className="mt-6 flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="w-24">
           <Field label="Ícone">
             <Input value={newCat.icon} onChange={(e) => setNewCat({ ...newCat, icon: e.target.value })} />

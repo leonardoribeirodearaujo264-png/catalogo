@@ -12,6 +12,7 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: "📊", exact: true },
   { href: "/admin/produtos", label: "Produtos & Serviços", icon: "🗂️" },
   { href: "/admin/categorias", label: "Categorias", icon: "🏷️" },
+  { href: "/admin/financeiro", label: "Financeiro", icon: "💰" },
   { href: "/admin/pedidos", label: "Pedidos", icon: "📬" },
   { href: "/admin/link-publico", label: "Link público", icon: "🔗" },
   { href: "/admin/configuracoes", label: "Configurações", icon: "⚙️" },

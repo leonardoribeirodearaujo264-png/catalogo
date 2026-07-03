@@ -10,7 +10,11 @@ export function validateImageFile(file: File): string | null {
   return null;
 }
 
-export async function uploadCatalogImage(file: File, catalogId: string): Promise<string> {
+export async function uploadCatalogImage(
+  file: File,
+  catalogId: string,
+  folder: "products" | "branding" = "products",
+): Promise<string> {
   const client = getBrowserClient();
   if (!client) throw new Error("Supabase não está configurado.");
 
@@ -18,7 +22,7 @@ export async function uploadCatalogImage(file: File, catalogId: string): Promise
   if (invalid) throw new Error(invalid);
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${catalogId}/${generateId("img")}.${ext}`;
+  const path = `${catalogId}/${folder}/${generateId("img")}.${ext}`;
 
   const { error } = await client.storage.from(BUCKET).upload(path, file, {
     cacheControl: "3600",

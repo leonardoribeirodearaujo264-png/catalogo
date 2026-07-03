@@ -48,7 +48,7 @@ export default function PublicLinkPage() {
         Este é o endereço do seu catálogo. Compartilhe no WhatsApp, Instagram ou onde quiser.
       </p>
 
-      <div className="mt-6 max-w-xl rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="mt-6 max-w-xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <Badge tone={catalog.isPublished ? "green" : "gray"}>
             {catalog.isPublished ? "Publicado" : "Não publicado"}
