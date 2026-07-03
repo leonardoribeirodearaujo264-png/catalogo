@@ -74,9 +74,9 @@ O projeto já vem com o cliente do Supabase integrado. Quando as variáveis de a
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
 
-4. Abra o **SQL Editor** do seu projeto Supabase e rode, nessa ordem:
-   - `supabase/schema.sql` — cria as tabelas `categories`, `items` e `store_settings` com as policies de RLS.
-   - `supabase/seed.sql` — carrega os mesmos dados de exemplo que já existem em `/data` (opcional).
+4. Abra o **SQL Editor** do seu projeto Supabase e rode um dos dois:
+   - `supabase/setup.sql` — arquivo único, cria as tabelas + RLS e já carrega os dados de exemplo (mais rápido).
+   - ou, separadamente: `supabase/schema.sql` (tabelas + RLS) e depois `supabase/seed.sql` (dados de exemplo, opcional).
 5. Reinicie `npm run dev`.
 
 > ⚠️ **Segurança**: o painel `/admin` ainda não tem tela de login. As policies de RLS em `schema.sql` liberam leitura e escrita para a chave pública só para o catálogo funcionar de ponta a ponta sem backend próprio. Antes de usar em produção com dados reais, adicione autenticação (ex.: Supabase Auth) e restrinja as policies de escrita a usuários autenticados.
