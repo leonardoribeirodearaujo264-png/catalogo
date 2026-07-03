@@ -10,9 +10,11 @@
 --
 --  Como usar:
 --    1) Cole este arquivo inteiro no SQL Editor do Supabase e
---       rode agora. Ele cria as tabelas e o RLS. A parte de
---       "dados de exemplo" não vai inserir nada ainda, porque o
---       catálogo de teste não existe até alguém se cadastrar.
+--       rode agora. Ele cria as tabelas, o RLS e o bucket de
+--       storage "catalog-images" (upload de fotos dos itens). A
+--       parte de "dados de exemplo" não vai inserir nada ainda,
+--       porque o catálogo de teste não existe até alguém se
+--       cadastrar.
 --    2) Vá em /register no app e crie uma conta com o nome do
 --       negócio "RR Repuxação" (gera o slug 'rr-repuxacao').
 --    3) Cole e rode este MESMO arquivo de novo. Dessa vez ele
@@ -187,6 +189,44 @@ create policy "owner read leads" on cd_leads for select using (
 );
 create policy "owner delete leads" on cd_leads for delete using (
   exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
+);
+
+-- ============================================================
+--  Storage — bucket para upload de imagens de produtos/serviços
+--
+--  Caminho dos arquivos: {catalog_id}/{arquivo}. As policies
+--  abaixo garantem que só o dono do catálogo consegue enviar,
+--  trocar ou apagar arquivos dentro da própria pasta; leitura é
+--  pública (o bucket é público, necessário para o <img> no
+--  catálogo funcionar sem autenticação).
+-- ============================================================
+
+insert into storage.buckets (id, name, public)
+values ('catalog-images', 'catalog-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "public read catalog images"   on storage.objects;
+drop policy if exists "owner upload catalog images"  on storage.objects;
+drop policy if exists "owner update catalog images"  on storage.objects;
+drop policy if exists "owner delete catalog images"  on storage.objects;
+
+create policy "public read catalog images" on storage.objects for select using (
+  bucket_id = 'catalog-images'
+);
+
+create policy "owner upload catalog images" on storage.objects for insert with check (
+  bucket_id = 'catalog-images'
+  and (storage.foldername(name))[1] in (select id::text from cd_catalogs where user_id = auth.uid())
+);
+
+create policy "owner update catalog images" on storage.objects for update using (
+  bucket_id = 'catalog-images'
+  and (storage.foldername(name))[1] in (select id::text from cd_catalogs where user_id = auth.uid())
+);
+
+create policy "owner delete catalog images" on storage.objects for delete using (
+  bucket_id = 'catalog-images'
+  and (storage.foldername(name))[1] in (select id::text from cd_catalogs where user_id = auth.uid())
 );
 
 -- ============================================================

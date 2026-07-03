@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAdminCatalog } from "@/lib/admin-catalog-context";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/admin/image-upload";
 import { generateId } from "@/lib/utils";
 import type { CatalogItem, ItemKind, ItemVariation } from "@/types/catalog";
 
@@ -44,7 +45,7 @@ function toFormState(item?: CatalogItem, defaultCategoryId?: string): FormState 
 
 export function ItemForm({ item }: { item?: CatalogItem }) {
   const router = useRouter();
-  const { categories, addItem, updateItem, deleteItem } = useAdminCatalog();
+  const { catalog, categories, addItem, updateItem, deleteItem } = useAdminCatalog();
   const [form, setForm] = useState<FormState>(() => toFormState(item, categories[0]?.id));
   const [saving, setSaving] = useState(false);
   const isEditing = !!item;
@@ -145,9 +146,11 @@ export function ItemForm({ item }: { item?: CatalogItem }) {
           </select>
         </Field>
 
-        <Field label="URL da imagem" hint="Opcional. Deixe em branco para usar um ícone ilustrativo.">
-          <Input value={form.image} onChange={(e) => patch({ image: e.target.value })} placeholder="https://..." />
-        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Imagem" hint="Opcional. Sem imagem, o item usa um ícone ilustrativo.">
+            {catalog && <ImageUpload value={form.image} onChange={(url) => patch({ image: url })} catalogId={catalog.id} />}
+          </Field>
+        </div>
 
         <div className="sm:col-span-2">
           <Field label="Descrição">

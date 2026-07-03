@@ -60,13 +60,14 @@ A autenticação e todos os dados do catálogo dependem do Supabase — não há
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
    ```
 
-5. Abra o **SQL Editor** do projeto, cole o conteúdo de `supabase/setup.sql` e rode. Cria as tabelas `catalogs`, `categories`, `products`, `leads` e as policies de RLS (cada usuário só acessa o próprio catálogo). Nesse primeiro momento a parte de "dados de exemplo" no fim do arquivo não insere nada — o catálogo de teste ainda não existe.
+5. Abra o **SQL Editor** do projeto, cole o conteúdo de `supabase/setup.sql` e rode. Cria as tabelas `cd_catalogs`, `cd_categories`, `cd_products`, `cd_leads` (prefixo `cd_` para não colidir com outras tabelas que já existirem no projeto), as policies de RLS e o bucket de storage `catalog-images` (upload de fotos dos produtos). Nesse primeiro momento a parte de "dados de exemplo" no fim do arquivo não insere nada — o catálogo de teste ainda não existe.
 6. Rode `npm run dev`, acesse `/register` e crie uma conta informando o nome do negócio, e-mail e senha. Isso já cria seu catálogo automaticamente (login automático, direto no painel).
 7. (Opcional) Para carregar os 12 itens de exemplo cobrindo vários nichos: cadastre-se com o nome do negócio **"RR Repuxação"**, depois rode `supabase/setup.sql` **de novo** no SQL Editor — dessa vez ele encontra o catálogo pelo slug `rr-repuxacao` e carrega os itens de exemplo + a logo (`public/logo-rr.png`). Se usou outro nome, troque o slug `rr-repuxacao` no bloco final do arquivo. É seguro rodar o arquivo quantas vezes precisar.
 
 ## Segurança
 
-- Cada linha de `catalogs`, `categories`, `products` e `leads` só é editável pelo próprio dono (`auth.uid() = catalogs.user_id`, verificado via RLS no Postgres) — a proteção real não depende do código do Next.js, é imposta pelo banco.
+- Cada linha de `cd_catalogs`, `cd_categories`, `cd_products` e `cd_leads` só é editável pelo próprio dono (`auth.uid() = cd_catalogs.user_id`, verificado via RLS no Postgres) — a proteção real não depende do código do Next.js, é imposta pelo banco.
+- Upload de imagens vai para o bucket `catalog-images` (Supabase Storage), dentro de uma pasta por catálogo (`{catalog_id}/arquivo.jpg`). RLS de storage garante que só o dono do catálogo envia/troca/apaga arquivos na própria pasta; leitura é pública (necessário para as imagens aparecerem no catálogo sem login).
 - Visitantes anônimos só leem catálogos com `is_published = true` e itens/categorias com `active = true`.
 - `leads` aceita inserção pública (para registrar quando alguém clica em "Comprar pelo WhatsApp"), mas só o dono do catálogo consegue listar (`/admin/pedidos`).
 - Nunca exponha a `service_role key` do Supabase no navegador nem em variáveis `NEXT_PUBLIC_*` — ela ignora todo o RLS.
