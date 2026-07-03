@@ -17,7 +17,7 @@ export async function fetchPublishedCatalogBySlug(
   slug: string,
 ): Promise<Catalog | null> {
   const { data, error } = await client
-    .from("catalogs")
+    .from("cd_catalogs")
     .select("*")
     .eq("slug", slug)
     .eq("is_published", true)
@@ -28,7 +28,7 @@ export async function fetchPublishedCatalogBySlug(
 
 export async function fetchPublicCategories(client: SupabaseClient, catalogId: string): Promise<Category[]> {
   const { data, error } = await client
-    .from("categories")
+    .from("cd_categories")
     .select("*")
     .eq("catalog_id", catalogId)
     .eq("active", true)
@@ -39,7 +39,7 @@ export async function fetchPublicCategories(client: SupabaseClient, catalogId: s
 
 export async function fetchPublicProducts(client: SupabaseClient, catalogId: string): Promise<CatalogItem[]> {
   const { data, error } = await client
-    .from("products")
+    .from("cd_products")
     .select("*")
     .eq("catalog_id", catalogId)
     .eq("active", true)
@@ -52,7 +52,7 @@ export async function insertLead(
   client: SupabaseClient,
   lead: { catalogId: string; items: InterestListEntry[]; message?: string },
 ): Promise<void> {
-  const { error } = await client.from("leads").insert({
+  const { error } = await client.from("cd_leads").insert({
     catalog_id: lead.catalogId,
     items: lead.items,
     message: lead.message ?? null,
@@ -64,7 +64,7 @@ export async function insertLead(
 
 export async function fetchMyCatalog(userId: string): Promise<Catalog | null> {
   const { data, error } = await requireBrowserClient()
-    .from("catalogs")
+    .from("cd_catalogs")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
@@ -74,7 +74,7 @@ export async function fetchMyCatalog(userId: string): Promise<Catalog | null> {
 
 export async function isSlugTaken(slug: string): Promise<boolean> {
   const { data, error } = await requireBrowserClient()
-    .from("catalogs")
+    .from("cd_catalogs")
     .select("id")
     .eq("slug", slug)
     .maybeSingle();
@@ -84,19 +84,19 @@ export async function isSlugTaken(slug: string): Promise<boolean> {
 
 export async function createCatalog(userId: string, patch: Partial<Catalog> & { slug: string; businessName: string }): Promise<Catalog> {
   const row = { user_id: userId, ...catalogToRow(patch) };
-  const { data, error } = await requireBrowserClient().from("catalogs").insert(row).select("*").single();
+  const { data, error } = await requireBrowserClient().from("cd_catalogs").insert(row).select("*").single();
   if (error) throw error;
   return rowToCatalog(data as CatalogRow);
 }
 
 export async function updateMyCatalog(id: string, patch: Partial<Catalog>): Promise<void> {
-  const { error } = await requireBrowserClient().from("catalogs").update(catalogToRow(patch)).eq("id", id);
+  const { error } = await requireBrowserClient().from("cd_catalogs").update(catalogToRow(patch)).eq("id", id);
   if (error) throw error;
 }
 
 export async function fetchOwnerCategories(catalogId: string): Promise<Category[]> {
   const { data, error } = await requireBrowserClient()
-    .from("categories")
+    .from("cd_categories")
     .select("*")
     .eq("catalog_id", catalogId)
     .order("order", { ascending: true });
@@ -106,7 +106,7 @@ export async function fetchOwnerCategories(catalogId: string): Promise<Category[
 
 export async function fetchOwnerProducts(catalogId: string): Promise<CatalogItem[]> {
   const { data, error } = await requireBrowserClient()
-    .from("products")
+    .from("cd_products")
     .select("*")
     .eq("catalog_id", catalogId)
     .order("created_at", { ascending: false });
@@ -116,35 +116,35 @@ export async function fetchOwnerProducts(catalogId: string): Promise<CatalogItem
 
 export async function insertCategory(category: Omit<Category, "id">): Promise<Category> {
   const row = categoryToRow(category);
-  const { data, error } = await requireBrowserClient().from("categories").insert(row).select("*").single();
+  const { data, error } = await requireBrowserClient().from("cd_categories").insert(row).select("*").single();
   if (error) throw error;
   return rowToCategory(data as CategoryRow);
 }
 
 export async function updateCategoryRow(id: string, patch: Partial<Category>): Promise<void> {
-  const { error } = await requireBrowserClient().from("categories").update(categoryToRow(patch)).eq("id", id);
+  const { error } = await requireBrowserClient().from("cd_categories").update(categoryToRow(patch)).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteCategoryRow(id: string): Promise<void> {
-  const { error } = await requireBrowserClient().from("categories").delete().eq("id", id);
+  const { error } = await requireBrowserClient().from("cd_categories").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function insertItem(item: Omit<CatalogItem, "id" | "createdAt">): Promise<CatalogItem> {
   const row = itemToRow(item);
-  const { data, error } = await requireBrowserClient().from("products").insert(row).select("*").single();
+  const { data, error } = await requireBrowserClient().from("cd_products").insert(row).select("*").single();
   if (error) throw error;
   return rowToItem(data as ProductRow);
 }
 
 export async function updateItemRow(id: string, patch: Partial<CatalogItem>): Promise<void> {
-  const { error } = await requireBrowserClient().from("products").update(itemToRow(patch)).eq("id", id);
+  const { error } = await requireBrowserClient().from("cd_products").update(itemToRow(patch)).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteItemRow(id: string): Promise<void> {
-  const { error } = await requireBrowserClient().from("products").delete().eq("id", id);
+  const { error } = await requireBrowserClient().from("cd_products").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -157,7 +157,7 @@ export interface LeadSummary {
 
 export async function fetchOwnerLeads(catalogId: string): Promise<LeadSummary[]> {
   const { data, error } = await requireBrowserClient()
-    .from("leads")
+    .from("cd_leads")
     .select("*")
     .eq("catalog_id", catalogId)
     .order("created_at", { ascending: false });

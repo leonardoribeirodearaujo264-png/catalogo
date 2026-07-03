@@ -1,5 +1,12 @@
 -- ============================================================
---  Catálogo Digital Universal — SQL único (schema + seed)
+--  Catálogo Digital — SQL único (schema + seed)
+--
+--  As tabelas usam o prefixo "cd_" (cd_catalogs, cd_categories,
+--  cd_products, cd_leads) de propósito: este projeto Supabase já
+--  tem outras tabelas de outros testes (ex.: "products",
+--  "categories" genéricos), então nomes sem prefixo davam erro
+--  de coluna inexistente (a tabela antiga era reaproveitada pelo
+--  "create table if not exists" e não tinha as colunas certas).
 --
 --  Como usar:
 --    1) Cole este arquivo inteiro no SQL Editor do Supabase e
@@ -21,7 +28,7 @@
 create extension if not exists "pgcrypto";
 
 -- ── Catálogos (um por usuário) ────────────────────────────────
-create table if not exists catalogs (
+create table if not exists cd_catalogs (
   id                       uuid primary key default gen_random_uuid(),
   user_id                  uuid not null unique references auth.users(id) on delete cascade,
   slug                     text not null unique,
@@ -43,9 +50,9 @@ create table if not exists catalogs (
 );
 
 -- ── Categorias ────────────────────────────────────────────────
-create table if not exists categories (
+create table if not exists cd_categories (
   id          uuid primary key default gen_random_uuid(),
-  catalog_id  uuid not null references catalogs(id) on delete cascade,
+  catalog_id  uuid not null references cd_catalogs(id) on delete cascade,
   slug        text not null,
   name        text not null,
   description text,
@@ -57,10 +64,10 @@ create table if not exists categories (
 );
 
 -- ── Produtos e serviços ──────────────────────────────────────
-create table if not exists products (
+create table if not exists cd_products (
   id            uuid primary key default gen_random_uuid(),
-  catalog_id    uuid not null references catalogs(id) on delete cascade,
-  category_id   uuid references categories(id) on delete set null,
+  catalog_id    uuid not null references cd_catalogs(id) on delete cascade,
+  category_id   uuid references cd_categories(id) on delete set null,
   slug          text not null,
   name          text not null,
   kind          text not null default 'produto' check (kind in ('produto', 'servico')),
@@ -78,14 +85,14 @@ create table if not exists products (
   unique (catalog_id, slug)
 );
 
-create index if not exists idx_categories_catalog on categories(catalog_id);
-create index if not exists idx_products_catalog   on products(catalog_id);
-create index if not exists idx_products_category  on products(category_id);
+create index if not exists idx_cd_categories_catalog on cd_categories(catalog_id);
+create index if not exists idx_cd_products_catalog   on cd_products(catalog_id);
+create index if not exists idx_cd_products_category  on cd_products(category_id);
 
 -- ── Pedidos/Leads (interesse enviado pelo visitante) ─────────
-create table if not exists leads (
+create table if not exists cd_leads (
   id             uuid primary key default gen_random_uuid(),
-  catalog_id     uuid not null references catalogs(id) on delete cascade,
+  catalog_id     uuid not null references cd_catalogs(id) on delete cascade,
   customer_name  text,
   customer_phone text,
   items          jsonb not null default '[]'::jsonb,
@@ -93,93 +100,93 @@ create table if not exists leads (
   created_at     timestamptz not null default now()
 );
 
-create index if not exists idx_leads_catalog on leads(catalog_id);
+create index if not exists idx_cd_leads_catalog on cd_leads(catalog_id);
 
 -- ============================================================
 --  Row Level Security
 --
 --  Cada usuário só lê/edita o PRÓPRIO catálogo (auth.uid() =
---  catalogs.user_id). Visitantes anônimos só leem catálogos com
---  is_published = true e itens/categorias com active = true.
+--  cd_catalogs.user_id). Visitantes anônimos só leem catálogos
+--  com is_published = true e itens/categorias com active = true.
 -- ============================================================
 
-alter table catalogs   enable row level security;
-alter table categories enable row level security;
-alter table products   enable row level security;
-alter table leads      enable row level security;
+alter table cd_catalogs   enable row level security;
+alter table cd_categories enable row level security;
+alter table cd_products   enable row level security;
+alter table cd_leads      enable row level security;
 
-drop policy if exists "public read published catalogs" on catalogs;
-drop policy if exists "owner read own catalog"          on catalogs;
-drop policy if exists "owner insert own catalog"        on catalogs;
-drop policy if exists "owner update own catalog"        on catalogs;
-drop policy if exists "owner delete own catalog"        on catalogs;
+drop policy if exists "public read published catalogs" on cd_catalogs;
+drop policy if exists "owner read own catalog"          on cd_catalogs;
+drop policy if exists "owner insert own catalog"        on cd_catalogs;
+drop policy if exists "owner update own catalog"        on cd_catalogs;
+drop policy if exists "owner delete own catalog"        on cd_catalogs;
 
-create policy "public read published catalogs" on catalogs for select using (is_published = true);
-create policy "owner read own catalog"   on catalogs for select using (auth.uid() = user_id);
-create policy "owner insert own catalog" on catalogs for insert with check (auth.uid() = user_id);
-create policy "owner update own catalog" on catalogs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "owner delete own catalog" on catalogs for delete using (auth.uid() = user_id);
+create policy "public read published catalogs" on cd_catalogs for select using (is_published = true);
+create policy "owner read own catalog"   on cd_catalogs for select using (auth.uid() = user_id);
+create policy "owner insert own catalog" on cd_catalogs for insert with check (auth.uid() = user_id);
+create policy "owner update own catalog" on cd_catalogs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "owner delete own catalog" on cd_catalogs for delete using (auth.uid() = user_id);
 
-drop policy if exists "public read categories" on categories;
-drop policy if exists "owner read categories"   on categories;
-drop policy if exists "owner write categories"  on categories;
-drop policy if exists "owner update categories" on categories;
-drop policy if exists "owner delete categories" on categories;
+drop policy if exists "public read categories" on cd_categories;
+drop policy if exists "owner read categories"   on cd_categories;
+drop policy if exists "owner write categories"  on cd_categories;
+drop policy if exists "owner update categories" on cd_categories;
+drop policy if exists "owner delete categories" on cd_categories;
 
-create policy "public read categories" on categories for select using (
-  active = true and exists (select 1 from catalogs c where c.id = categories.catalog_id and c.is_published = true)
+create policy "public read categories" on cd_categories for select using (
+  active = true and exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.is_published = true)
 );
-create policy "owner read categories" on categories for select using (
-  exists (select 1 from catalogs c where c.id = categories.catalog_id and c.user_id = auth.uid())
+create policy "owner read categories" on cd_categories for select using (
+  exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner write categories" on categories for insert with check (
-  exists (select 1 from catalogs c where c.id = categories.catalog_id and c.user_id = auth.uid())
+create policy "owner write categories" on cd_categories for insert with check (
+  exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner update categories" on categories for update using (
-  exists (select 1 from catalogs c where c.id = categories.catalog_id and c.user_id = auth.uid())
+create policy "owner update categories" on cd_categories for update using (
+  exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.user_id = auth.uid())
 ) with check (
-  exists (select 1 from catalogs c where c.id = categories.catalog_id and c.user_id = auth.uid())
+  exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner delete categories" on categories for delete using (
-  exists (select 1 from catalogs c where c.id = categories.catalog_id and c.user_id = auth.uid())
+create policy "owner delete categories" on cd_categories for delete using (
+  exists (select 1 from cd_catalogs c where c.id = cd_categories.catalog_id and c.user_id = auth.uid())
 );
 
-drop policy if exists "public read products" on products;
-drop policy if exists "owner read products"   on products;
-drop policy if exists "owner write products"  on products;
-drop policy if exists "owner update products" on products;
-drop policy if exists "owner delete products" on products;
+drop policy if exists "public read products" on cd_products;
+drop policy if exists "owner read products"   on cd_products;
+drop policy if exists "owner write products"  on cd_products;
+drop policy if exists "owner update products" on cd_products;
+drop policy if exists "owner delete products" on cd_products;
 
-create policy "public read products" on products for select using (
-  active = true and exists (select 1 from catalogs c where c.id = products.catalog_id and c.is_published = true)
+create policy "public read products" on cd_products for select using (
+  active = true and exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.is_published = true)
 );
-create policy "owner read products" on products for select using (
-  exists (select 1 from catalogs c where c.id = products.catalog_id and c.user_id = auth.uid())
+create policy "owner read products" on cd_products for select using (
+  exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner write products" on products for insert with check (
-  exists (select 1 from catalogs c where c.id = products.catalog_id and c.user_id = auth.uid())
+create policy "owner write products" on cd_products for insert with check (
+  exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner update products" on products for update using (
-  exists (select 1 from catalogs c where c.id = products.catalog_id and c.user_id = auth.uid())
+create policy "owner update products" on cd_products for update using (
+  exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.user_id = auth.uid())
 ) with check (
-  exists (select 1 from catalogs c where c.id = products.catalog_id and c.user_id = auth.uid())
+  exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner delete products" on products for delete using (
-  exists (select 1 from catalogs c where c.id = products.catalog_id and c.user_id = auth.uid())
+create policy "owner delete products" on cd_products for delete using (
+  exists (select 1 from cd_catalogs c where c.id = cd_products.catalog_id and c.user_id = auth.uid())
 );
 
-drop policy if exists "public insert leads" on leads;
-drop policy if exists "owner read leads"    on leads;
-drop policy if exists "owner delete leads"  on leads;
+drop policy if exists "public insert leads" on cd_leads;
+drop policy if exists "owner read leads"    on cd_leads;
+drop policy if exists "owner delete leads"  on cd_leads;
 
-create policy "public insert leads" on leads for insert with check (
-  exists (select 1 from catalogs c where c.id = leads.catalog_id and c.is_published = true)
+create policy "public insert leads" on cd_leads for insert with check (
+  exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.is_published = true)
 );
-create policy "owner read leads" on leads for select using (
-  exists (select 1 from catalogs c where c.id = leads.catalog_id and c.user_id = auth.uid())
+create policy "owner read leads" on cd_leads for select using (
+  exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
 );
-create policy "owner delete leads" on leads for delete using (
-  exists (select 1 from catalogs c where c.id = leads.catalog_id and c.user_id = auth.uid())
+create policy "owner delete leads" on cd_leads for delete using (
+  exists (select 1 from cd_catalogs c where c.id = cd_leads.catalog_id and c.user_id = auth.uid())
 );
 
 -- ============================================================
@@ -191,11 +198,11 @@ create policy "owner delete leads" on leads for delete using (
 --  novo depois de criar a conta.
 -- ============================================================
 
-update catalogs set logo_url = '/logo-rr.png' where slug = 'rr-repuxacao';
+update cd_catalogs set logo_url = '/logo-rr.png' where slug = 'rr-repuxacao';
 
-insert into categories (catalog_id, slug, name, description, icon, "order")
+insert into cd_categories (catalog_id, slug, name, description, icon, "order")
 select id, v.slug, v.name, v.description, v.icon, v.ord
-from catalogs, (values
+from cd_catalogs, (values
   ('moda-vestuario',          'Moda & Vestuário',           'Roupas, calçados e acessórios.',                         '👕', 1),
   ('alimentacao-delivery',    'Alimentação & Delivery',     'Pratos, marmitas e delivery.',                            '🍔', 2),
   ('beleza-cosmeticos',       'Beleza & Cosméticos',        'Skincare, maquiagem e perfumaria.',                       '💄', 3),
@@ -207,15 +214,15 @@ from catalogs, (values
   ('saude-clinicas',          'Saúde & Clínicas',           'Consultas, exames e procedimentos.',                      '🩺', 9),
   ('autonomos-freelancers',   'Autônomos & Freelancers',    'Trabalho sob demanda de profissionais independentes.',    '🧑‍💻', 10)
 ) as v(slug, name, description, icon, ord)
-where catalogs.slug = 'rr-repuxacao'
+where cd_catalogs.slug = 'rr-repuxacao'
 on conflict (catalog_id, slug) do nothing;
 
-insert into products (catalog_id, category_id, slug, name, kind, description, price, price_compare, stock, variations, active, featured, promotional)
+insert into cd_products (catalog_id, category_id, slug, name, kind, description, price, price_compare, stock, variations, active, featured, promotional)
 select
   c.id,
-  (select id from categories where catalog_id = c.id and slug = v.category_slug),
+  (select id from cd_categories where catalog_id = c.id and slug = v.category_slug),
   v.slug, v.name, v.kind, v.description, v.price, v.price_compare, v.stock, v.variations::jsonb, true, v.featured, v.promotional
-from catalogs c, (values
+from cd_catalogs c, (values
   ('moda-vestuario', 'camisa-polo-piquet', 'Camisa Polo Piquet', 'produto',
    'Camisa polo em malha piquet 100% algodão, corte tradicional e caimento confortável. Disponível em vários tamanhos.',
    89.90, null, 42,
