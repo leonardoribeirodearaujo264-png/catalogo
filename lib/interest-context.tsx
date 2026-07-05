@@ -14,9 +14,14 @@ import type { InterestListEntry } from "@/types/catalog";
 
 const INTEREST_KEY = "catalogo:interesse";
 
+export interface AddedNotice {
+  id: number;
+  quantity: number;
+}
+
 interface InterestContextValue {
   entries: InterestListEntry[];
-  addEntry: (entry: Omit<InterestListEntry, "quantity">) => void;
+  addEntry: (entry: Omit<InterestListEntry, "quantity">, quantity?: number) => void;
   removeEntry: (catalogId: string, itemId: string, variationName?: string) => void;
   updateQuantity: (catalogId: string, itemId: string, variationName: string | undefined, quantity: number) => void;
   clear: (catalogId: string) => void;
@@ -25,6 +30,7 @@ interface InterestContextValue {
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  notice: AddedNotice | null;
 }
 
 const InterestContext = createContext<InterestContextValue | null>(null);
@@ -37,6 +43,7 @@ export function InterestProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<InterestListEntry[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [notice, setNotice] = useState<AddedNotice | null>(null);
   const openCart = useCallback(() => setIsCartOpen(true), []);
   const closeCart = useCallback(() => setIsCartOpen(false), []);
 
@@ -52,18 +59,20 @@ export function InterestProvider({ children }: { children: ReactNode }) {
     if (hydrated) writeStorage(INTEREST_KEY, entries);
   }, [entries, hydrated]);
 
-  const addEntry: InterestContextValue["addEntry"] = useCallback((entry) => {
+  const addEntry: InterestContextValue["addEntry"] = useCallback((entry, quantity) => {
+    const qty = quantity && quantity > 0 ? quantity : 1;
     setEntries((prev) => {
       const existing = prev.find((e) => sameEntry(e, entry.catalogId, entry.itemId, entry.variationName));
       if (existing) {
         return prev.map((e) =>
           sameEntry(e, entry.catalogId, entry.itemId, entry.variationName)
-            ? { ...e, quantity: e.quantity + 1 }
+            ? { ...e, quantity: e.quantity + qty }
             : e,
         );
       }
-      return [...prev, { ...entry, quantity: 1 }];
+      return [...prev, { ...entry, quantity: qty }];
     });
+    setNotice({ id: Date.now(), quantity: qty });
   }, []);
 
   const removeEntry: InterestContextValue["removeEntry"] = useCallback((catalogId, itemId, variationName) => {
@@ -107,8 +116,21 @@ export function InterestProvider({ children }: { children: ReactNode }) {
       isCartOpen,
       openCart,
       closeCart,
+      notice,
     }),
-    [entries, addEntry, removeEntry, updateQuantity, clear, entriesForCatalog, totalItemsForCatalog, isCartOpen, openCart, closeCart],
+    [
+      entries,
+      addEntry,
+      removeEntry,
+      updateQuantity,
+      clear,
+      entriesForCatalog,
+      totalItemsForCatalog,
+      isCartOpen,
+      openCart,
+      closeCart,
+      notice,
+    ],
   );
 
   return <InterestContext.Provider value={value}>{children}</InterestContext.Provider>;

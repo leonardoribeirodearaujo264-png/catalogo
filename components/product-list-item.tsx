@@ -1,9 +1,10 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
 import { DiscountBadge } from "@/components/discount-badge";
+import { QuantityStepper } from "@/components/quantity-stepper";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem, Category } from "@/types/catalog";
 
@@ -20,8 +21,9 @@ export function ProductListItem({
   watermark?: string;
   added?: boolean;
   onOpen: (item: CatalogItem) => void;
-  onAddToCart: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem, quantity: number) => void;
 }) {
+  const [quantity, setQuantity] = useState(1);
   const hasDiscount = !!item.priceCompare && item.priceCompare > item.price;
   const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceCompare!) * 100) : 0;
   const outOfStock = item.stock !== null && item.stock !== undefined && item.stock <= 0;
@@ -34,7 +36,8 @@ export function ProductListItem({
       onOpen(item);
       return;
     }
-    onAddToCart(item);
+    onAddToCart(item, quantity);
+    setQuantity(1);
   }
 
   return (
@@ -64,6 +67,11 @@ export function ProductListItem({
           <div className="mt-0.5 flex items-baseline gap-1.5">
             {hasDiscount && <span className="text-xs font-semibold text-red-500 line-through">{formatPrice(item.priceCompare!)}</span>}
             <span className="text-base font-bold text-black">{formatPrice(item.price)}</span>
+          </div>
+        )}
+        {!outOfStock && (
+          <div className="mt-2">
+            <QuantityStepper value={quantity} onChange={setQuantity} className="w-fit" />
           </div>
         )}
       </div>

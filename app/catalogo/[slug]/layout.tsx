@@ -6,8 +6,9 @@ import { CatalogViewProvider } from "@/lib/catalog-view-context";
 import { TopUtilityBar } from "@/components/top-utility-bar";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { WhatsAppFloatButton } from "@/components/whatsapp-float-button";
 import { CartDrawer } from "@/components/cart-drawer";
+import { CartCheckoutBar } from "@/components/cart-checkout-bar";
+import { AddToCartToast } from "@/components/add-to-cart-toast";
 
 export default async function CatalogLayout({
   children,
@@ -40,8 +41,9 @@ export default async function CatalogLayout({
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />
-      <WhatsAppFloatButton />
       <CartDrawer />
+      <CartCheckoutBar />
+      <AddToCartToast />
     </CatalogViewProvider>
   );
 }

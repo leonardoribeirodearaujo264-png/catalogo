@@ -14,7 +14,7 @@ import type { CatalogItem } from "@/types/catalog";
 
 export default function CatalogHomePage() {
   const { catalog, categories, items, getCategory } = useCatalogView();
-  const { addEntry, openCart } = useInterestList();
+  const { addEntry } = useInterestList();
 
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -53,11 +53,10 @@ export default function CatalogHomePage() {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
-  function handleAddToCart(item: CatalogItem) {
-    addEntry({ catalogId: catalog.id, itemId: item.id, name: item.name, price: item.price });
+  function handleAddToCart(item: CatalogItem, quantity: number) {
+    addEntry({ catalogId: catalog.id, itemId: item.id, name: item.name, price: item.price }, quantity);
     setAddedId(item.id);
     setTimeout(() => setAddedId(null), 1000);
-    openCart();
   }
 
   return (

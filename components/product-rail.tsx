@@ -24,7 +24,7 @@ export function ProductRail({
   expanded: boolean;
   addedId?: string | null;
   onOpen: (item: CatalogItem) => void;
-  onAddToCart: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem, quantity: number) => void;
 }) {
   if (items.length === 0) return null;
 

@@ -16,7 +16,7 @@ import type { CatalogItem } from "@/types/catalog";
 
 export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: () => void }) {
   const { catalog, getCategory } = useCatalogView();
-  const { addEntry, openCart } = useInterestList();
+  const { addEntry } = useInterestList();
   const category = getCategory(item.categoryId);
 
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
@@ -50,7 +50,6 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
       variationName: selectedVariation?.name,
     });
     onClose();
-    openCart();
   }
 
   async function handleWhatsAppBuy() {

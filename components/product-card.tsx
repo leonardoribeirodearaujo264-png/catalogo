@@ -1,9 +1,10 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { ItemImage } from "@/components/item-image";
 import { Badge } from "@/components/ui/badge";
 import { DiscountBadge } from "@/components/discount-badge";
+import { QuantityStepper } from "@/components/quantity-stepper";
 import { formatPrice, cn } from "@/lib/utils";
 import type { CatalogItem, Category } from "@/types/catalog";
 
@@ -22,8 +23,9 @@ export function ProductCard({
   size?: "compact" | "large";
   added?: boolean;
   onOpen: (item: CatalogItem) => void;
-  onAddToCart: (item: CatalogItem) => void;
+  onAddToCart: (item: CatalogItem, quantity: number) => void;
 }) {
+  const [quantity, setQuantity] = useState(1);
   const hasDiscount = !!item.priceCompare && item.priceCompare > item.price;
   const discountPct = hasDiscount ? Math.round((1 - item.price / item.priceCompare!) * 100) : 0;
   const outOfStock = item.stock !== null && item.stock !== undefined && item.stock <= 0;
@@ -36,7 +38,8 @@ export function ProductCard({
       onOpen(item);
       return;
     }
-    onAddToCart(item);
+    onAddToCart(item, quantity);
+    setQuantity(1);
   }
 
   return (
@@ -76,13 +79,18 @@ export function ProductCard({
         <h3 className={cn("line-clamp-2 font-medium text-[#444444]", size === "large" ? "text-sm" : "text-xs")}>
           {item.name}
         </h3>
-        <div className="mt-auto pt-1">
-          {hasDiscount && (
-            <div className="text-xs font-semibold text-red-500 line-through">{formatPrice(item.priceCompare!)}</div>
-          )}
-          <div className={cn("font-bold text-black", size === "large" ? "text-xl" : "text-base")}>
-            {formatPrice(item.price)}
+        <div className="mt-auto flex flex-col items-center gap-2 pt-1">
+          <div>
+            {hasDiscount && (
+              <div className="text-xs font-semibold text-red-500 line-through">{formatPrice(item.priceCompare!)}</div>
+            )}
+            <div className={cn("font-bold text-black", size === "large" ? "text-xl" : "text-base")}>
+              {formatPrice(item.price)}
+            </div>
           </div>
+          {!outOfStock && (
+            <QuantityStepper value={quantity} onChange={setQuantity} size={size === "large" ? "large" : "compact"} />
+          )}
         </div>
       </div>
     </div>
