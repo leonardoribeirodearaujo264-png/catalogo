@@ -1,32 +1,18 @@
 import { cn } from "@/lib/utils";
 
-const GRADIENTS = [
-  "from-slate-700 to-slate-900",
-  "from-emerald-600 to-emerald-900",
-  "from-rose-500 to-rose-800",
-  "from-amber-500 to-amber-800",
-  "from-sky-600 to-sky-900",
-  "from-fuchsia-600 to-fuchsia-900",
-];
-
-function gradientFor(seed: string) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  return GRADIENTS[hash % GRADIENTS.length];
-}
-
 export function ItemImage({
   src,
   icon,
-  seed,
   alt,
   className,
+  watermark,
 }: {
   src?: string;
   icon: string;
-  seed: string;
   alt: string;
   className?: string;
+  /** Texto de marca exibido como marca d'água discreta quando não há foto. */
+  watermark?: string;
 }) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
@@ -36,14 +22,18 @@ export function ItemImage({
   return (
     <div
       className={cn(
-        "flex h-full w-full items-center justify-center bg-gradient-to-br text-5xl",
-        gradientFor(seed),
+        "relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 text-5xl",
         className,
       )}
       role="img"
       aria-label={alt}
     >
-      <span className="drop-shadow-sm">{icon}</span>
+      {watermark && (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-3xl font-extrabold uppercase tracking-widest text-gray-400/40 select-none">
+          {watermark}
+        </span>
+      )}
+      <span className="relative drop-shadow-sm">{icon}</span>
     </div>
   );
 }

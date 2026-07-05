@@ -98,7 +98,13 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative aspect-square w-full bg-gray-100 sm:rounded-t-3xl">
-          <ItemImage src={item.image} icon={category?.icon ?? "🛍️"} seed={item.id} alt={item.name} className="sm:rounded-t-3xl" />
+          <ItemImage
+            src={item.image}
+            icon={category?.icon ?? "🛍️"}
+            alt={item.name}
+            watermark={catalog.businessName.slice(0, 10)}
+            className="sm:rounded-t-3xl"
+          />
           <button
             onClick={onClose}
             aria-label="Fechar"

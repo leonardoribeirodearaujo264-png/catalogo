@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { getPublicClient } from "@/lib/supabase/public-client";
 import { fetchPublicCategories, fetchPublicProducts, fetchPublishedCatalogBySlug } from "@/lib/supabase/queries";
 import { CatalogViewProvider } from "@/lib/catalog-view-context";
+import { TopUtilityBar } from "@/components/top-utility-bar";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppFloatButton } from "@/components/whatsapp-float-button";
@@ -35,6 +36,7 @@ export default async function CatalogLayout({
 
   return (
     <CatalogViewProvider catalog={catalog} categories={categories} items={items}>
+      <TopUtilityBar />
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />

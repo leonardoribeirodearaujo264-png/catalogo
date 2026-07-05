@@ -19,7 +19,7 @@ export function SiteFooter() {
   ].filter(Boolean) as { href: string; label: string; icon: React.ReactNode }[];
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-950 text-gray-300">
+    <footer id="endereco" className="border-t border-gray-200 bg-gray-950 text-gray-300">
       <div className="container-app flex flex-col items-center gap-5 py-12 text-center sm:items-start sm:text-left">
         <div>
           <h3 className="text-lg font-bold text-white">{catalog.businessName}</h3>
