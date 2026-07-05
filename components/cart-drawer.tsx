@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import { useCatalogView } from "@/lib/catalog-view-context";
 import { useInterestList } from "@/lib/interest-context";
+import { useDeliveryAddress } from "@/lib/delivery-address-context";
 import { getBrowserClient } from "@/lib/supabase/browser-client";
 import { insertOrder } from "@/lib/supabase/queries";
 import { Button } from "@/components/ui/button";
 import { CartIcon, CloseIcon, WhatsAppIcon } from "@/components/icons";
-import { buildInterestListMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { appendDeliveryAddress, buildInterestListMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/utils";
 
 export function CartDrawer() {
   const { catalog } = useCatalogView();
   const { entriesForCatalog, updateQuantity, removeEntry, clear, isCartOpen, closeCart } = useInterestList();
+  const { getAddress } = useDeliveryAddress();
   const entries = entriesForCatalog(catalog.id);
   const [sending, setSending] = useState(false);
 
@@ -31,7 +33,8 @@ export function CartDrawer() {
   async function handleFinish() {
     if (entries.length === 0) return;
     setSending(true);
-    const message = buildInterestListMessage(catalog.whatsappDefaultMessage, entries);
+    const baseMessage = buildInterestListMessage(catalog.whatsappDefaultMessage, entries);
+    const message = appendDeliveryAddress(baseMessage, getAddress(catalog.id));
     const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, message);
 
     try {

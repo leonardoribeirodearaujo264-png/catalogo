@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useCatalogView } from "@/lib/catalog-view-context";
+import { useDeliveryAddress } from "@/lib/delivery-address-context";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { DeliveryAddressModal } from "@/components/delivery-address-modal";
 
 function ChatIcon() {
   return (
@@ -30,33 +33,36 @@ function PinIcon() {
 
 export function TopUtilityBar() {
   const { catalog } = useCatalogView();
+  const { getAddress } = useDeliveryAddress();
+  const [modalOpen, setModalOpen] = useState(false);
   const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, catalog.whatsappDefaultMessage);
-  const hasAddress = catalog.address.street || catalog.address.city;
+  const savedAddress = getAddress(catalog.id);
 
   return (
-    <div className="border-b border-[#E4E4E4] bg-white">
-      <div className="container-app flex items-center justify-center gap-8 py-3">
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-sm font-bold text-black"
-        >
-          <ChatIcon />
-          Contatos
-        </a>
-        {hasAddress ? (
-          <a href="#endereco" className="flex items-center gap-1.5 text-sm font-bold text-black">
-            <PinIcon />
-            Entrega
+    <>
+      <div className="border-b border-[#E4E4E4] bg-white">
+        <div className="container-app flex items-center justify-center gap-8 py-3">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm font-bold text-black"
+          >
+            <ChatIcon />
+            Contatos
           </a>
-        ) : (
-          <span className="flex items-center gap-1.5 text-sm font-bold text-black">
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1.5 text-sm font-bold text-black"
+          >
             <PinIcon />
-            Entrega
-          </span>
-        )}
+            {savedAddress ? "Entrega ✓" : "Entrega"}
+          </button>
+        </div>
       </div>
-    </div>
+
+      {modalOpen && <DeliveryAddressModal onClose={() => setModalOpen(false)} />}
+    </>
   );
 }

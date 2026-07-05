@@ -24,7 +24,7 @@ export function CartCheckoutBar() {
       <button
         type="button"
         onClick={openCart}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl bg-black px-4 py-3.5 text-white shadow-lg shadow-black/30 active:scale-[0.98]"
+        className="flex w-full items-center justify-between gap-3 rounded-2xl bg-[#16a34a] px-4 py-3.5 text-white shadow-lg shadow-black/30 active:scale-[0.98]"
       >
         <span className="flex items-center gap-2 text-sm font-bold">
           <CartIcon className="h-5 w-5" />

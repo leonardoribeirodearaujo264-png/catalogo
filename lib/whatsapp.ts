@@ -1,5 +1,5 @@
 import { formatPrice } from "@/lib/utils";
-import type { InterestListEntry } from "@/types/catalog";
+import type { DeliveryAddress, InterestListEntry } from "@/types/catalog";
 
 function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
@@ -41,4 +41,21 @@ export function buildInterestListMessage(
 
   lines.push("", `Total estimado: ${formatPrice(total)}`);
   return lines.join("\n");
+}
+
+export function buildDeliveryAddressBlock(address: DeliveryAddress): string {
+  const lines = [
+    "Endereço de entrega:",
+    address.recipientName,
+    `${address.street}, ${address.number}${address.complement ? ` ${address.complement}` : ""}`,
+    `${address.neighborhood} - ${address.city}/${address.state}`,
+    `CEP: ${address.zip}`,
+  ];
+  if (address.reference) lines.push(`Ref.: ${address.reference}`);
+  return lines.join("\n");
+}
+
+export function appendDeliveryAddress(message: string, address: DeliveryAddress | null): string {
+  if (!address) return message;
+  return `${message}\n\n${buildDeliveryAddressBlock(address)}`;
 }

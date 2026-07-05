@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { CartDrawer } from "@/components/cart-drawer";
 import { CartCheckoutBar } from "@/components/cart-checkout-bar";
 import { AddToCartToast } from "@/components/add-to-cart-toast";
+import { AddressSavedToast } from "@/components/address-saved-toast";
 
 export default async function CatalogLayout({
   children,
@@ -44,6 +45,7 @@ export default async function CatalogLayout({
       <CartDrawer />
       <CartCheckoutBar />
       <AddToCartToast />
+      <AddressSavedToast />
     </CatalogViewProvider>
   );
 }

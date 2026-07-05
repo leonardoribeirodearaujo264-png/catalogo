@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCatalogView } from "@/lib/catalog-view-context";
 import { useInterestList } from "@/lib/interest-context";
+import { useDeliveryAddress } from "@/lib/delivery-address-context";
 import { getBrowserClient } from "@/lib/supabase/browser-client";
 import { insertOrder } from "@/lib/supabase/queries";
 import { ItemImage } from "@/components/item-image";
@@ -10,13 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { DiscountBadge } from "@/components/discount-badge";
 import { Button } from "@/components/ui/button";
 import { CloseIcon, WhatsAppIcon } from "@/components/icons";
-import { buildItemInterestMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { appendDeliveryAddress, buildItemInterestMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatPrice } from "@/lib/utils";
 import type { CatalogItem } from "@/types/catalog";
 
 export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: () => void }) {
   const { catalog, getCategory } = useCatalogView();
   const { addEntry } = useInterestList();
+  const { getAddress } = useDeliveryAddress();
   const category = getCategory(item.categoryId);
 
   const [selectedVariationId, setSelectedVariationId] = useState<string | null>(null);
@@ -54,12 +56,13 @@ export function ProductModal({ item, onClose }: { item: CatalogItem; onClose: ()
 
   async function handleWhatsAppBuy() {
     setSendingWhatsApp(true);
-    const message = buildItemInterestMessage({
+    const baseMessage = buildItemInterestMessage({
       greeting: catalog.whatsappDefaultMessage,
       itemName: item.name,
       price: finalPrice,
       variationName: selectedVariation?.name,
     });
+    const message = appendDeliveryAddress(baseMessage, getAddress(catalog.id));
     const whatsappUrl = buildWhatsAppUrl(catalog.whatsappNumber, message);
 
     try {

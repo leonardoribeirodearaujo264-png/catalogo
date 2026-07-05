@@ -83,6 +83,19 @@ export interface Catalog {
   layout: CatalogLayout;
 }
 
+/** Endereço de entrega informado pelo visitante — apenas coleta, sem cálculo de frete. */
+export interface DeliveryAddress {
+  recipientName: string;
+  zip: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  reference?: string;
+}
+
 export interface InterestListEntry {
   catalogId: string;
   itemId: string;
