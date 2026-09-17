@@ -57,27 +57,27 @@ export function TrustStrip() {
 
   return (
     <section className="band">
-      {/* Celular: carrossel lado a lado — quatro colunas fixas em 360px dariam
-          78px por selo e o texto ficaria ilegível. Do md para cima, grade.
-          Sem as classes .snap-row/.surface aqui: elas vencem os utilitários
-          responsivos do Tailwind e o md:grid nunca chegava a valer. */}
-      <div className="section-y">
-        <div className="container-app no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto md:grid md:grid-cols-4 md:gap-8 md:overflow-x-visible">
+      {/* Quatro selos numa linha só, em qualquer tela. No celular sobram ~76px
+          por coluna, então o item vira ícone + título centralizados e a
+          descrição fica para o desktop — cabe inteiro, sem corte nem rolagem
+          lateral. */}
+      <div className="container-app section-y">
+        <div className="grid grid-cols-4 gap-2 sm:gap-5 md:gap-8">
           {store.trustBadges.map((badge) => {
             const Icon = TRUST_ICONS[badge.icon] ?? TRUST_ICONS.shield;
             return (
               <div
                 key={badge.id}
-                className="flex w-[72vw] max-w-[260px] shrink-0 snap-start flex-col gap-3 rounded-2xl border border-white/8 bg-graphite-900 p-4 md:w-auto md:max-w-none md:shrink md:border-0 md:bg-transparent md:p-0 lg:gap-4"
+                className="flex flex-col items-center gap-2 text-center md:items-start md:gap-4 md:text-left"
               >
-                <span className="accent-border accent-text accent-soft flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border lg:h-13 lg:w-13">
-                  <Icon className="h-6 w-6" />
+                <span className="accent-border accent-text accent-soft flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border md:h-13 md:w-13 md:rounded-2xl">
+                  <Icon className="h-5 w-5 md:h-6 md:w-6" />
                 </span>
-                <div>
-                  <h3 className="text-[15px] font-semibold leading-snug text-cream md:text-[17px]">
+                <div className="min-w-0">
+                  <h3 className="line-clamp-2 text-[10.5px] font-semibold leading-tight text-cream sm:text-[13px] md:text-[17px] md:leading-snug">
                     {badge.title}
                   </h3>
-                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-mute md:text-[14.5px]">
+                  <p className="mt-1.5 hidden text-[14.5px] leading-relaxed text-mute md:block">
                     {badge.description}
                   </p>
                 </div>
@@ -95,8 +95,13 @@ export function TrustStrip() {
 export function FeaturedVehicles() {
   const { store, vehicles } = useStoreView();
 
+  // Os destaques vêm primeiro; o resto do estoque completa a lista. Sem isso
+  // uma loja com 3 destaques deixava um card órfão sozinho na última linha.
+  // São 4 no celular (2×2) e 6 no desktop (2 linhas de 3) — em nenhum dos
+  // dois sobra card solto.
   const featured = vehicles.filter((v) => v.featured);
-  const list = (featured.length > 0 ? featured : vehicles).slice(0, 6);
+  const resto = vehicles.filter((v) => !v.featured);
+  const list = [...featured, ...resto].slice(0, 6);
   const whatsappHref = store.whatsappNumber
     ? buildWhatsAppUrl(store.whatsappNumber, buildStoreMessage(store))
     : `/loja/${store.slug}/contato`;
@@ -136,7 +141,12 @@ export function FeaturedVehicles() {
             )}
           >
             {list.map((vehicle, index) => (
-              <VehicleCard key={vehicle.id} vehicle={vehicle} priority={index < 3} />
+              // Os dois últimos só entram no desktop: ficam no HTML (bom para
+              // busca e para quem compartilha a página), mas não empurram a
+              // home do celular para baixo.
+              <div key={vehicle.id} className={cn("h-full", index >= 4 && "hidden lg:block")}>
+                <VehicleCard vehicle={vehicle} priority={index < 3} />
+              </div>
             ))}
           </div>
         )}
