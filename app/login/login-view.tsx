@@ -4,20 +4,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signIn } from "@/lib/auth";
+import { isValidEmail } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { ErrorNote } from "@/components/ui/feedback";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthField } from "@/components/auth/auth-field";
-import { LockIcon, MailIcon, SpinnerIcon } from "@/components/icons";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function mapError(err: unknown): string {
-  const msg = err instanceof Error ? err.message : "";
-  if (/invalid login credentials/i.test(msg)) return "E-mail ou senha inválidos.";
-  if (/email not confirmed/i.test(msg)) {
+  const message = err instanceof Error ? err.message : "";
+  if (/invalid login credentials/i.test(message)) return "E-mail ou senha inválidos.";
+  if (/email not confirmed/i.test(message)) {
     return "Confirme seu e-mail antes de entrar (ou desative 'Confirm email' no painel do Supabase).";
   }
-  return msg || "Não foi possível entrar. Tente novamente.";
+  if (/fetch|network/i.test(message)) return "Sem conexão com o servidor. Verifique sua internet.";
+  return message || "Não foi possível entrar. Tente novamente.";
 }
 
 export function LoginView() {
@@ -27,28 +27,28 @@ export function LoginView() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   function validate() {
-    const errors: typeof fieldErrors = {};
-    if (!email.trim()) errors.email = "Informe seu e-mail.";
-    else if (!EMAIL_RE.test(email)) errors.email = "Digite um e-mail válido.";
-    if (!password) errors.password = "Informe sua senha.";
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    const next: typeof errors = {};
+    if (!email.trim()) next.email = "Informe seu e-mail.";
+    else if (!isValidEmail(email)) next.email = "Digite um e-mail válido.";
+    if (!password) next.password = "Informe sua senha.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     setFormError(null);
     if (!validate()) return;
 
     setLoading(true);
     try {
       await signIn({ email, password });
-      router.push(redirectTo);
+      router.replace(redirectTo);
       router.refresh();
     } catch (err) {
       setFormError(mapError(err));
@@ -57,50 +57,45 @@ export function LoginView() {
   }
 
   return (
-    <AuthShell subtitle="Acesse o painel do seu catálogo">
-      <h1 className="text-xl font-extrabold tracking-tight text-gray-900">Entrar</h1>
-      <p className="mt-1 text-sm text-gray-500">Que bom te ver de novo.</p>
+    <AuthShell
+      title="Entrar no painel"
+      subtitle="Acesse o painel da sua loja para gerenciar estoque, leads e o catálogo público."
+      footer={
+        <>
+          Ainda não tem conta?{" "}
+          <Link href="/register" className="accent-text font-semibold hover:underline">
+            Criar loja
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        {formError && <ErrorNote>{formError}</ErrorNote>}
 
-      <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-4">
-        <AuthField
+        <Field
           label="E-mail"
-          icon={<MailIcon className="h-4 w-4" />}
           type="email"
-          autoComplete="email"
-          placeholder="voce@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          error={fieldErrors.email}
+          error={errors.email}
+          autoComplete="email"
+          placeholder="voce@sualoja.com.br"
+          required
         />
-        <AuthField
+        <Field
           label="Senha"
-          icon={<LockIcon className="h-4 w-4" />}
-          isPassword
-          autoComplete="current-password"
-          placeholder="••••••••"
+          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          error={fieldErrors.password}
+          error={errors.password}
+          autoComplete="current-password"
+          required
         />
 
-        {formError && (
-          <p className="animate-fade-in rounded-lg bg-red-50 px-3.5 py-2.5 text-xs font-semibold text-red-600">
-            {formError}
-          </p>
-        )}
-
-        <Button type="submit" variant="brand" size="lg" className="w-full" disabled={loading}>
-          {loading && <SpinnerIcon className="h-4 w-4 animate-spin-slow" />}
-          {loading ? "Entrando..." : "Entrar"}
+        <Button type="submit" loading={loading} full size="lg" className="mt-2">
+          Entrar
         </Button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-gray-500">
-        Não possui uma conta?{" "}
-        <Link href="/register" className="font-bold text-gray-900 hover:text-red-600">
-          Criar conta
-        </Link>
-      </p>
     </AuthShell>
   );
 }

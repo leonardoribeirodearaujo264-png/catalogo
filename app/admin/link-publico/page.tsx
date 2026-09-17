@@ -1,140 +1,172 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useAdminCatalog } from "@/lib/admin-catalog-context";
+import { useAdminStore } from "@/lib/admin-store-context";
+import { useToast } from "@/lib/toast-context";
 import { isSlugTaken } from "@/lib/supabase/queries";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Field, Input } from "@/components/ui/input";
-import { slugify } from "@/lib/utils";
+import { slugError, slugify } from "@/lib/utils";
+import { PageHeader, Panel } from "@/components/admin/admin-ui";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Field, Toggle } from "@/components/ui/field";
+import { ArrowRightIcon, CheckIcon, LinkIcon } from "@/components/icons";
 
 export default function PublicLinkPage() {
-  const { catalog, updateCatalog, loading } = useAdminCatalog();
+  const { store, updateStoreData, vehicles, role } = useAdminStore();
+  const toast = useToast();
+
+  const [slug, setSlug] = useState(store?.slug ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [origin, setOrigin] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [togglingPublish, setTogglingPublish] = useState(false);
-  const [slugDraft, setSlugDraft] = useState("");
-  const [slugSynced, setSlugSynced] = useState<string | null>(null);
-  const [slugError, setSlugError] = useState<string | null>(null);
-  const [savingSlug, setSavingSlug] = useState(false);
-  const [slugSaved, setSlugSaved] = useState(false);
 
   useEffect(() => {
-    // window só existe no cliente; evita divergência entre o HTML do
-    // servidor e a primeira renderização no navegador.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- window.location só existe no cliente; preenche depois da hidratação
     setOrigin(window.location.origin);
   }, []);
 
-  if (catalog && catalog.slug !== slugSynced) {
-    setSlugSynced(catalog.slug);
-    setSlugDraft(catalog.slug);
-  }
+  if (!store) return null;
 
-  if (loading || !catalog) {
-    return <p className="text-sm text-gray-400">Carregando...</p>;
-  }
-
-  const path = `/catalogo/${catalog.slug}`;
-  const fullUrl = `${origin}${path}`;
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(fullUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  async function handleTogglePublish() {
-    setTogglingPublish(true);
-    try {
-      await updateCatalog({ isPublished: !catalog!.isPublished });
-    } finally {
-      setTogglingPublish(false);
-    }
-  }
+  const url = `${origin}/loja/${store.slug}`;
+  const publishedCount = vehicles.filter((v) => v.published && v.status !== "arquivado").length;
+  const canEdit = role !== "collaborator";
 
   async function handleSaveSlug() {
-    setSlugError(null);
-    const clean = slugify(slugDraft);
-    if (!clean) {
-      setSlugError("Informe um link válido.");
+    const normalized = slugify(slug);
+    const validation = slugError(normalized);
+    if (validation) {
+      setError(validation);
       return;
     }
-    if (clean === catalog!.slug) return;
+    if (normalized === store!.slug) {
+      setError(null);
+      return;
+    }
 
-    setSavingSlug(true);
+    setSaving(true);
     try {
-      const taken = await isSlugTaken(clean);
-      if (taken) {
-        setSlugError("Esse link já está em uso. Escolha outro.");
+      if (await isSlugTaken(normalized)) {
+        setError("Esse link já está em uso por outra loja.");
         return;
       }
-      await updateCatalog({ slug: clean });
-      setSlugDraft(clean);
-      setSlugSaved(true);
-      setTimeout(() => setSlugSaved(false), 2500);
+      await updateStoreData({ slug: normalized });
+      setSlug(normalized);
+      setError(null);
+      toast.success("Link atualizado. O endereço antigo deixa de funcionar.");
     } catch (err) {
       console.error(err);
-      setSlugError("Não foi possível salvar. Tente novamente.");
+      setError("Não foi possível salvar o link. Tente outro.");
     } finally {
-      setSavingSlug(false);
+      setSaving(false);
+    }
+  }
+
+  async function handlePublish(value: boolean) {
+    try {
+      await updateStoreData({ isPublished: value });
+      toast.success(value ? "Catálogo publicado." : "Catálogo despublicado.");
+    } catch {
+      toast.error("Não foi possível alterar a publicação.");
     }
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Link público</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Este é o endereço do seu catálogo. Compartilhe no WhatsApp, Instagram ou onde quiser.
-      </p>
+    <>
+      <PageHeader
+        title="Link público"
+        description="O endereço que você compartilha no WhatsApp, Instagram e cartão de visita."
+      />
 
-      <div className="mt-6 max-w-xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Badge tone={catalog.isPublished ? "green" : "gray"}>
-            {catalog.isPublished ? "Publicado" : "Não publicado"}
-          </Badge>
-          {!catalog.isPublished && (
-            <span className="text-xs text-gray-400">Visitantes não conseguem ver o catálogo enquanto ele estiver despublicado.</span>
-          )}
-        </div>
+      <div className="flex flex-col gap-4">
+        <Panel title="Seu endereço">
+          <div className="surface-raised flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center">
+            <LinkIcon className="h-5 w-5 shrink-0 accent-text" />
+            <code className="min-w-0 flex-1 break-all text-[14px] text-cream">{url}</code>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(url);
+                  toast.success("Link copiado.");
+                }}
+              >
+                Copiar
+              </Button>
+              <ButtonLink size="sm" href={`/loja/${store.slug}`} target="_blank">
+                Abrir
+                <ArrowRightIcon className="h-4 w-4" />
+              </ButtonLink>
+            </div>
+          </div>
 
-        <div className="mt-4 flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center">
-          <code className="flex-1 truncate text-sm text-gray-700">{fullUrl || path}</code>
-          <Button size="sm" variant="secondary" onClick={handleCopy}>
-            {copied ? "Copiado ✓" : "Copiar link"}
-          </Button>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link href={path} target="_blank">
-            <Button variant="outline" size="sm">Abrir catálogo →</Button>
-          </Link>
-          <Button variant={catalog.isPublished ? "danger" : "primary"} size="sm" onClick={handleTogglePublish} disabled={togglingPublish}>
-            {togglingPublish ? "Salvando..." : catalog.isPublished ? "Despublicar catálogo" : "Publicar catálogo"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-6 max-w-xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-gray-900">Personalizar o link</h2>
-        <p className="mt-1 text-xs text-gray-500">
-          Mudar o link faz com que links já compartilhados antes parem de funcionar.
-        </p>
-
-        <div className="mt-4">
-          <Field label="Link do catálogo" hint={`${origin}/catalogo/`}>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input value={slugDraft} onChange={(e) => setSlugDraft(e.target.value)} className="flex-1" />
-              <Button size="sm" onClick={handleSaveSlug} disabled={savingSlug || slugify(slugDraft) === catalog.slug}>
-                {savingSlug ? "Salvando..." : "Salvar link"}
+          {canEdit && (
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+              <Field
+                label="Personalizar o link"
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value.toLowerCase());
+                  setError(null);
+                }}
+                error={error ?? undefined}
+                hint="Letras minúsculas, números e hífen. Ex.: prime-veiculos"
+                className="flex-1"
+              />
+              <Button onClick={handleSaveSlug} loading={saving} disabled={slugify(slug) === store.slug}>
+                Salvar link
               </Button>
             </div>
-          </Field>
-          {slugError && <p className="mt-1.5 text-xs font-semibold text-red-500">{slugError}</p>}
-          {slugSaved && <p className="mt-1.5 text-xs font-semibold text-green-600">✓ Link atualizado.</p>}
-        </div>
+          )}
+        </Panel>
+
+        {canEdit && (
+          <Panel title="Publicação">
+            <Toggle
+              checked={store.isPublished}
+              onChange={handlePublish}
+              label={store.isPublished ? "Catálogo publicado" : "Catálogo despublicado"}
+              description={
+                store.isPublished
+                  ? "Qualquer pessoa com o link consegue ver os veículos publicados."
+                  : "O link retorna página não encontrada para visitantes."
+              }
+            />
+
+            <ul className="mt-5 flex flex-col gap-2 text-[13.5px] text-mute">
+              <Requirement done={!!store.whatsappNumber} label="WhatsApp cadastrado" />
+              <Requirement done={!!store.logoUrl} label="Logotipo enviado" />
+              <Requirement done={publishedCount > 0} label={`${publishedCount} veículo(s) publicado(s)`} />
+              <Requirement done={!!store.address.city} label="Endereço informado" />
+            </ul>
+          </Panel>
+        )}
+
+        <Panel title="Onde divulgar" description="Sugestões rápidas para o link circular.">
+          <ul className="flex flex-col gap-2 text-[13.5px] text-mute">
+            <li>• Bio do Instagram e do Facebook da loja</li>
+            <li>• Mensagem automática e status do WhatsApp</li>
+            <li>• Assinatura de e-mail e cartão de visita</li>
+            <li>• Placas e adesivos no pátio, com QR code apontando para o link</li>
+          </ul>
+        </Panel>
       </div>
-    </div>
+    </>
+  );
+}
+
+function Requirement({ done, label }: { done: boolean; label: string }) {
+  return (
+    <li className="flex items-center gap-2.5">
+      <span
+        className={
+          done
+            ? "flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300"
+            : "flex h-5 w-5 items-center justify-center rounded-full border border-white/15 text-graphite-600"
+        }
+      >
+        {done ? <CheckIcon className="h-3 w-3" /> : null}
+      </span>
+      <span className={done ? "text-cream" : undefined}>{label}</span>
+    </li>
   );
 }

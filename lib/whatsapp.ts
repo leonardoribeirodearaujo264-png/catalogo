@@ -1,61 +1,44 @@
-import { formatPrice } from "@/lib/utils";
-import type { DeliveryAddress, InterestListEntry } from "@/types/catalog";
-
-function onlyDigits(value: string): string {
-  return value.replace(/\D/g, "");
-}
+import { formatVehiclePrice, onlyDigits } from "@/lib/utils";
+import { vehicleFullTitle, type Vehicle } from "@/types/vehicle";
+import type { Store } from "@/types/store";
 
 export function buildWhatsAppUrl(phone: string, message: string): string {
-  const digits = onlyDigits(phone);
-  const text = encodeURIComponent(message);
-  return `https://wa.me/${digits}?text=${text}`;
+  return `https://wa.me/${onlyDigits(phone)}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildItemInterestMessage(params: {
-  greeting: string;
-  itemName: string;
-  price: number;
-  variationName?: string;
-}): string {
-  const lines = [
-    params.greeting,
-    "",
-    `• ${params.itemName}${params.variationName ? ` (${params.variationName})` : ""} — ${formatPrice(params.price)}`,
-  ];
-  return lines.join("\n");
+/**
+ * Monta a mensagem a partir do template da loja. Suporta {veiculo}, {loja}
+ * e {preco}; se o template não tiver nenhum placeholder, o veículo é
+ * acrescentado no fim para a mensagem nunca sair vazia de contexto.
+ */
+export function buildVehicleMessage(store: Store, vehicle?: Vehicle | null): string {
+  const template =
+    store.whatsappDefaultMessage?.trim() ||
+    "Olá! Vi o veículo {veiculo} no catálogo da {loja} e gostaria de mais informações.";
+
+  const vehicleLabel = vehicle ? vehicleFullTitle(vehicle) : "";
+  const price = vehicle ? formatVehiclePrice(vehicle.pricePromo || vehicle.price) : "";
+
+  const filled = template
+    .replaceAll("{veiculo}", vehicleLabel)
+    .replaceAll("{loja}", store.name)
+    .replaceAll("{preco}", price);
+
+  const hasPlaceholder = /\{veiculo\}|\{loja\}|\{preco\}/.test(template);
+  if (!hasPlaceholder && vehicleLabel) return `${filled}\n\n${vehicleLabel} — ${price}`;
+
+  // Sem veículo (botão "Fale conosco"), a frase não pode ficar com buraco.
+  return filled.replace(/\s+—\s+$/, "").replace(/\s{2,}/g, " ").trim();
 }
 
-export function buildInterestListMessage(
-  greeting: string,
-  entries: InterestListEntry[],
-): string {
-  const lines = [greeting, ""];
-  let total = 0;
-
-  for (const entry of entries) {
-    const subtotal = entry.price * entry.quantity;
-    total += subtotal;
-    const variation = entry.variationName ? ` (${entry.variationName})` : "";
-    lines.push(`• ${entry.quantity}x ${entry.name}${variation} — ${formatPrice(subtotal)}`);
-  }
-
-  lines.push("", `Total estimado: ${formatPrice(total)}`);
-  return lines.join("\n");
+export function buildStoreMessage(store: Store): string {
+  return `Olá! Vim pelo catálogo da ${store.name} e gostaria de mais informações.`;
 }
 
-export function buildDeliveryAddressBlock(address: DeliveryAddress): string {
-  const lines = [
-    "Endereço de entrega:",
-    address.recipientName,
-    `${address.street}, ${address.number}${address.complement ? ` ${address.complement}` : ""}`,
-    `${address.neighborhood} - ${address.city}/${address.state}`,
-    `CEP: ${address.zip}`,
-  ];
-  if (address.reference) lines.push(`Ref.: ${address.reference}`);
-  return lines.join("\n");
-}
-
-export function appendDeliveryAddress(message: string, address: DeliveryAddress | null): string {
-  if (!address) return message;
-  return `${message}\n\n${buildDeliveryAddressBlock(address)}`;
+export function buildOfferMessage(store: Store, vehicle: Vehicle, name: string, amount: number): string {
+  return [
+    `Olá! Meu nome é ${name}.`,
+    `Vi o veículo ${vehicleFullTitle(vehicle)} no catálogo da ${store.name}`,
+    `e gostaria de fazer uma proposta de ${formatVehiclePrice(amount)}.`,
+  ].join(" ");
 }

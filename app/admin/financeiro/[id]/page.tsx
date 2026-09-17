@@ -1,9 +1,11 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
 import { useFinancial } from "@/lib/financial-context";
+import { PageHeader } from "@/components/admin/admin-ui";
 import { TransactionForm } from "@/components/admin/financeiro/transaction-form";
+import { EmptyState } from "@/components/ui/feedback";
+import { ButtonLink } from "@/components/ui/button";
 
 export default function EditTransactionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -12,20 +14,22 @@ export default function EditTransactionPage({ params }: { params: Promise<{ id: 
 
   if (!transaction) {
     return (
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Lançamento não encontrado</h1>
-        <Link href="/admin/financeiro" className="text-sm font-semibold text-brand-accent">← Voltar</Link>
-      </div>
+      <EmptyState
+        title="Lançamento não encontrado"
+        description="Ele pode ter sido excluído ou pertence a outra loja."
+        action={
+          <ButtonLink href="/admin/financeiro" variant="outline">
+            Voltar para o financeiro
+          </ButtonLink>
+        }
+      />
     );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Editar lançamento</h1>
-      <p className="mt-1 text-sm text-gray-500">{transaction.description}</p>
-      <div className="mt-6">
-        <TransactionForm transaction={transaction} />
-      </div>
-    </div>
+    <>
+      <PageHeader title="Editar lançamento" description={transaction.description} />
+      <TransactionForm transaction={transaction} />
+    </>
   );
 }

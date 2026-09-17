@@ -1,16 +1,25 @@
 export type TransactionType = "receita" | "despesa";
 export type TransactionStatus = "pendente" | "pago" | "atrasado" | "cancelado";
-export type PaymentMethod = "pix" | "dinheiro" | "cartao" | "boleto" | "transferencia" | "outro";
+export type PaymentMethod =
+  | "pix"
+  | "dinheiro"
+  | "cartao"
+  | "boleto"
+  | "transferencia"
+  | "financiamento"
+  | "outro";
 
 export interface FinancialTransaction {
   id: string;
   userId: string;
-  catalogId: string;
+  storeId: string;
   type: TransactionType;
   description: string;
   customerName?: string;
-  productId?: string;
-  orderId?: string;
+  /** Veículo que originou o lançamento (venda, preparação, despachante...). */
+  vehicleId?: string;
+  /** Lead que virou venda. */
+  leadId?: string;
   amount: number;
   dueDate?: string;
   paidDate?: string;
@@ -27,6 +36,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cartao: "Cartão",
   boleto: "Boleto",
   transferencia: "Transferência",
+  financiamento: "Financiamento",
   outro: "Outro",
 };
 

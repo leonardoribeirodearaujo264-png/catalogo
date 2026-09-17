@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useAdminCatalog } from "@/lib/admin-catalog-context";
+import { useAdminStore } from "@/lib/admin-store-context";
 import {
   deleteTransactionRow,
   fetchTransactions,
@@ -23,7 +23,7 @@ interface FinancialContextValue {
   transactions: FinancialTransaction[];
   loading: boolean;
   error: string | null;
-  addTransaction: (tx: Omit<FinancialTransaction, "id" | "userId" | "catalogId" | "createdAt" | "updatedAt">) => Promise<FinancialTransaction>;
+  addTransaction: (tx: Omit<FinancialTransaction, "id" | "userId" | "storeId" | "createdAt" | "updatedAt">) => Promise<FinancialTransaction>;
   updateTransaction: (id: string, patch: Partial<FinancialTransaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   getTransaction: (id: string) => FinancialTransaction | undefined;
@@ -33,7 +33,7 @@ const FinancialContext = createContext<FinancialContextValue | null>(null);
 
 export function FinancialProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { catalog, loading: catalogLoading } = useAdminCatalog();
+  const { store, loading: storeLoading } = useAdminStore();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +42,13 @@ export function FinancialProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function load() {
-      if (catalogLoading) return;
-      if (!catalog) {
+      if (storeLoading) return;
+      if (!store) {
         setLoading(false);
         return;
       }
       try {
-        const data = await fetchTransactions(catalog.id);
+        const data = await fetchTransactions(store.id);
         if (!cancelled) setTransactions(data);
       } catch (err) {
         console.error(err);
@@ -62,16 +62,16 @@ export function FinancialProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [catalog, catalogLoading]);
+  }, [store, storeLoading]);
 
   const addTransaction: FinancialContextValue["addTransaction"] = useCallback(
     async (tx) => {
-      if (!catalog || !user) throw new Error("Catálogo ainda não carregado.");
-      const created = await insertTransaction({ ...tx, catalogId: catalog.id, userId: user.id });
+      if (!store || !user) throw new Error("Loja ainda não carregada.");
+      const created = await insertTransaction({ ...tx, storeId: store.id, userId: user.id });
       setTransactions((prev) => [created, ...prev]);
       return created;
     },
-    [catalog, user],
+    [store, user],
   );
 
   const updateTransaction: FinancialContextValue["updateTransaction"] = useCallback(async (id, patch) => {

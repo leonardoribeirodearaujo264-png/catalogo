@@ -1,29 +1,35 @@
-import type { HTMLAttributes } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "gray" | "green" | "red" | "amber" | "dark";
+type Tone = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
 
-const tones: Record<Tone, string> = {
-  gray: "bg-gray-100 text-gray-700",
-  green: "bg-green-100 text-green-700",
-  red: "bg-red-100 text-red-700",
-  amber: "bg-amber-100 text-amber-700",
-  dark: "bg-gray-900 text-white",
+const TONES: Record<Tone, string> = {
+  neutral: "bg-white/8 text-mute border-white/10",
+  accent: "accent-soft accent-text accent-border",
+  success: "bg-emerald-500/12 text-emerald-300 border-emerald-500/25",
+  warning: "bg-amber-500/12 text-amber-300 border-amber-500/25",
+  danger: "bg-red-500/12 text-red-300 border-red-500/25",
+  info: "bg-sky-500/12 text-sky-300 border-sky-500/25",
 };
 
 export function Badge({
-  tone = "gray",
+  children,
+  tone = "neutral",
   className,
-  ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: Tone }) {
+}: {
+  children: ReactNode;
+  tone?: Tone;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
-        tones[tone],
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide",
+        TONES[tone],
         className,
       )}
-      {...props}
-    />
+    >
+      {children}
+    </span>
   );
 }

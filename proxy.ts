@@ -3,8 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from "@/lib/supabase/config";
 
 // Next.js 16 renomeou "middleware" para "proxy" (mesmo arquivo, mesma
-// finalidade). Protege as rotas /admin/* exigindo sessão, e evita que quem
-// já está logado veja /login ou /register de novo.
+// finalidade). Exige sessão em /admin, /superadmin e /onboarding, e tira
+// de /login e /register quem já está logado.
+//
+// Esta é a primeira barreira, não a única: quem é dono do quê continua
+// sendo decidido pelo RLS no banco, com base em auth.uid().
+const PROTECTED = ["/admin", "/superadmin", "/onboarding"];
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -29,7 +34,7 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && pathname.startsWith("/admin")) {
+  if (!user && PROTECTED.some((route) => pathname.startsWith(route))) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirect", pathname);
@@ -47,5 +52,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/register"],
+  matcher: ["/admin/:path*", "/superadmin/:path*", "/onboarding/:path*", "/login", "/register"],
 };
