@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getPublicClient } from "@/lib/supabase/public-client";
 import { fetchPublicStoreSlugs, fetchPublicVehicles, fetchPublicStoreBySlug } from "@/lib/supabase/queries";
+import { getSiteUrl } from "@/lib/site-url";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const BASE = getSiteUrl();
 
 export const revalidate = 3600;
 
